@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/raintreeinc/ditaconvert"
 )
 
 func main() {
-
 	fmt.Println(strings.Repeat("\n", 10))
 	fmt.Println("<< START >>")
 
@@ -25,9 +25,51 @@ func main() {
 	printcaption("NAV")
 	printnav(index.Nav, "", "    ")
 
-	//printcaption("TOPICS")
+	printcaption("TOPICS")
 
-	fmt.Println("<< DONE >>")
+	topics := make([]*ditaconvert.Topic, 0, len(index.Topics))
+	for _, topic := range index.Topics {
+		topics = append(topics, topic)
+	}
+
+	sort.Sort(TopicByName(topics))
+
+	for _, topic := range topics {
+		fmt.Println()
+		fmt.Println("====", topic.Title, "==== ", topic.Path)
+		for _, links := range topic.Links {
+			if links.Parent != nil {
+				fmt.Print("\t^  ", links.Parent.Title, "\n")
+			}
+			if links.Prev != nil || links.Next != nil {
+				fmt.Print("\t")
+				if links.Prev != nil {
+					fmt.Print("<- ", links.Prev.Title)
+				}
+				if links.Next != nil {
+					if links.Prev != nil {
+						fmt.Print(" - ")
+					}
+					fmt.Print(links.Next.Title, " ->")
+				}
+				fmt.Println()
+			}
+			if len(links.Children) > 0 {
+				fmt.Print("\tv  ")
+				for _, child := range links.Children {
+					fmt.Print(child.Title, " ")
+				}
+				fmt.Println()
+			}
+			if len(links.Siblings) > 0 {
+				fmt.Print("\t~  ")
+				for _, sibling := range links.Siblings {
+					fmt.Print(sibling.Title, " ")
+				}
+				fmt.Println()
+			}
+		}
+	}
 }
 
 func printcaption(name string) {
@@ -39,10 +81,6 @@ func printcaption(name string) {
 }
 
 func printnav(e *ditaconvert.Entry, prefix, indent string) {
-	if !e.TOC {
-		return
-	}
-
 	link := ""
 	if e.Topic != nil {
 		link = ">"
@@ -57,3 +95,9 @@ func printnav(e *ditaconvert.Entry, prefix, indent string) {
 		printnav(child, prefix+indent, indent)
 	}
 }
+
+type TopicByName []*ditaconvert.Topic
+
+func (a TopicByName) Len() int           { return len(a) }
+func (a TopicByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a TopicByName) Less(i, j int) bool { return a[i].Path < a[j].Path }

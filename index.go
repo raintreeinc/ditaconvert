@@ -154,22 +154,22 @@ func (context LoadContext) LoadTopic(filename string) *Topic {
 		}
 	}
 
-	synopsis, _ := topic.ShortDesc.Text()
-	title := topic.NavTitle
-	if title == "" {
-		title = topic.Title
-	}
-
-	return &Topic{
+	top := &Topic{
 		Path:       name,
-		Title:      title,
+		Title:      topic.NavTitle,
 		ShortTitle: topic.Title,
-		Synopsis:   synopsis,
 
 		Raw:      data,
 		Modified: modified,
 		Original: topic,
 	}
+	top.Synopsis, _ = topic.ShortDesc.Text()
+	if top.Title == "" {
+		top.Title = topic.Title
+	}
+
+	context.Topics[cname] = top
+	return top
 }
 
 func (context LoadContext) ProcessMapNode(node *dita.MapNode) []*Entry {
