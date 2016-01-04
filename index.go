@@ -63,6 +63,7 @@ func NewIndex(fs FileSystem) *Index {
 		Nav: &Entry{
 			Title:   "Navigation",
 			Linking: dita.NormalLinking,
+			TOC:     true,
 		},
 
 		Maps:   make(map[string]*Map),

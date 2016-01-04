@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+
 	fmt.Println(strings.Repeat("\n", 10))
 	fmt.Println("<< START >>")
 
@@ -21,5 +22,38 @@ func main() {
 		fmt.Println(err)
 	}
 
+	printcaption("NAV")
+	printnav(index.Nav, "", "    ")
+
+	//printcaption("TOPICS")
+
 	fmt.Println("<< DONE >>")
+}
+
+func printcaption(name string) {
+	fmt.Println()
+	fmt.Println("==================")
+	fmt.Printf("= %-14s =\n", name)
+	fmt.Println("==================")
+	fmt.Println()
+}
+
+func printnav(e *ditaconvert.Entry, prefix, indent string) {
+	if !e.TOC {
+		return
+	}
+
+	link := ""
+	if e.Topic != nil {
+		link = ">"
+	}
+	if len(e.Children) == 0 {
+		fmt.Printf("%s- %s %s\n", prefix, e.Title, link)
+		return
+	}
+
+	fmt.Printf("%s+ %s %s\n", prefix, e.Title, link)
+	for _, child := range e.Children {
+		printnav(child, prefix+indent, indent)
+	}
 }

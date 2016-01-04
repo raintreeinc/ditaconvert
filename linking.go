@@ -13,6 +13,8 @@ type Link struct {
 	Type  string
 	Scope string
 	Href  string
+
+	Selector string
 }
 
 type Links struct {
@@ -167,13 +169,13 @@ func (context LoadContext) CreateRelatedLinks(a *Entry) {
 
 		var topic *Topic
 		if rellink.Href != "" {
-			name, _ := SplitLink(rellink.Href)
+			name, selector := SplitLink(rellink.Href)
 			topic = context.LoadTopic(name)
 			if topic != nil {
 				links.Siblings = append(links.Siblings, &Link{
-					Topic: topic,
-					Title: rellink.Text,
-					Href:  rellink.Href,
+					Topic:    topic,
+					Title:    rellink.Text,
+					Selector: selector,
 				})
 			}
 			continue
