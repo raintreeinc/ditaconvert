@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"os"
+	"path"
 	"path/filepath"
-	"sort"
 	"strings"
+	"time"
 
 	"github.com/raintreeinc/ditaconvert"
 )
@@ -13,6 +15,10 @@ import (
 func main() {
 	fmt.Println(strings.Repeat("\n", 10))
 	fmt.Println("<< START >>")
+	start := time.Now()
+	defer func() {
+		fmt.Printf("<< DONE %v >>\n", time.Since(start))
+	}()
 
 	root := os.Args[1]
 	index := ditaconvert.NewIndex(ditaconvert.Dir(filepath.Dir(root)))
@@ -22,82 +28,63 @@ func main() {
 		fmt.Println(err)
 	}
 
-	printcaption("NAV")
-	printnav(index.Nav, "", "    ")
-
-	printcaption("TOPICS")
-
-	topics := make([]*ditaconvert.Topic, 0, len(index.Topics))
+	WriteTOC(index.Nav, filepath.FromSlash("output~/_toc.html"))
 	for _, topic := range index.Topics {
-		topics = append(topics, topic)
+		filename := path.Join("output~", ReplaceExt(topic.Path, ".html"))
+		WriteTopic(topic, filepath.FromSlash(filename))
 	}
+}
 
-	sort.Sort(TopicByName(topics))
+func WriteTOC(entry *ditaconvert.Entry, filename string) {
+	os.MkdirAll(filepath.Dir(filename), 0755)
+	out, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer out.Close()
 
-	for _, topic := range topics {
-		fmt.Println()
-		fmt.Println("====", topic.Title, "==== ", topic.Path)
-		for _, links := range topic.Links {
-			if links.Parent != nil {
-				fmt.Print("\t^  ", links.Parent.Title, "\n")
-			}
-			if links.Prev != nil || links.Next != nil {
-				fmt.Print("\t")
-				if links.Prev != nil {
-					fmt.Print("<- ", links.Prev.Title)
-				}
-				if links.Next != nil {
-					if links.Prev != nil {
-						fmt.Print(" - ")
-					}
-					fmt.Print(links.Next.Title, " ->")
-				}
-				fmt.Println()
-			}
-			if len(links.Children) > 0 {
-				fmt.Print("\tv  ")
-				for _, child := range links.Children {
-					fmt.Print(child.Title, " ")
-				}
-				fmt.Println()
-			}
-			if len(links.Siblings) > 0 {
-				fmt.Print("\t~  ")
-				for _, sibling := range links.Siblings {
-					fmt.Print(sibling.Title, " ")
-				}
-				fmt.Println()
-			}
+	fmt.Fprintf(out, `<base target="dynamic">`)
+
+	var PrintEntry func(entry *ditaconvert.Entry)
+	PrintEntry = func(entry *ditaconvert.Entry) {
+		if !entry.TOC {
+			return
 		}
+		if entry.Topic == nil {
+			fmt.Fprintf(out, `<li>%s`, html.EscapeString(entry.Title))
+		} else {
+			newpath := ReplaceExt(entry.Topic.Path, ".html")
+			fmt.Fprintf(out, `<li><a href="/%s">%s</a>`, newpath, entry.Title)
+		}
+
+		if len(entry.Children) > 0 {
+			fmt.Fprintf(out, `<ul>`)
+			for _, child := range entry.Children {
+				PrintEntry(child)
+			}
+			fmt.Fprintf(out, `</ul>`)
+		}
+		fmt.Fprintf(out, "</li>")
 	}
+	PrintEntry(entry)
 }
 
-func printcaption(name string) {
-	fmt.Println()
-	fmt.Println("==================")
-	fmt.Printf("= %-14s =\n", name)
-	fmt.Println("==================")
-	fmt.Println()
+func WriteTopic(topic *ditaconvert.Topic, filename string) {
+	os.MkdirAll(filepath.Dir(filename), 0755)
+	out, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer out.Close()
+
+	fmt.Fprintf(out, `<h1>`+html.EscapeString(topic.Title)+`</h1>`)
+	if topic.Synopsis != "" {
+		fmt.Fprintf(out, `<p class="synopsis">`+html.EscapeString(topic.Synopsis)+`</p>`)
+	}
+
+	fmt.Fprintf(out, ditaconvert.RelatedLinksAsHTML(topic))
 }
 
-func printnav(e *ditaconvert.Entry, prefix, indent string) {
-	link := ""
-	if e.Topic != nil {
-		link = ">"
-	}
-	if len(e.Children) == 0 {
-		fmt.Printf("%s- %s %s\n", prefix, e.Title, link)
-		return
-	}
-
-	fmt.Printf("%s+ %s %s\n", prefix, e.Title, link)
-	for _, child := range e.Children {
-		printnav(child, prefix+indent, indent)
-	}
+func ReplaceExt(name string, newext string) string {
+	return name[:len(name)-len(path.Ext(name))] + newext
 }
-
-type TopicByName []*ditaconvert.Topic
-
-func (a TopicByName) Len() int           { return len(a) }
-func (a TopicByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a TopicByName) Less(i, j int) bool { return a[i].Path < a[j].Path }
