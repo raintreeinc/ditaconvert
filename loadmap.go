@@ -39,7 +39,7 @@ func (context MapContext) LoadMap(filename string) []*Entry {
 	context.Maps[cname] = m
 
 	context.Dir = path.Dir(name)
-	m.Entries = context.ProocessNode(m.Node)
+	m.Entries = context.ProcessNode(m.Node)
 
 	return m.Entries
 }
@@ -87,7 +87,7 @@ func (context MapContext) LoadTopic(filename string) *Topic {
 	return top
 }
 
-func (context MapContext) ProocessNode(node *dita.MapNode) []*Entry {
+func (context MapContext) ProcessNode(node *dita.MapNode) []*Entry {
 	if node == nil {
 		panic("invalid node passed as argument")
 	}
@@ -115,7 +115,7 @@ func (context MapContext) ProocessNode(node *dita.MapNode) []*Entry {
 		var entries []*Entry
 		context.TOC = isChildTOC(context.TOC, node.TOC)
 		for _, child := range node.Children {
-			entries = append(entries, context.ProocessNode(child)...)
+			entries = append(entries, context.ProcessNode(child)...)
 		}
 		context.Entry = &Entry{}
 		context.AddFamilyLinks(entries)
@@ -158,7 +158,7 @@ func (context MapContext) ProocessNode(node *dita.MapNode) []*Entry {
 
 	children := []*Entry{}
 	for _, child := range node.Children {
-		children = append(children, context.ProocessNode(child)...)
+		children = append(children, context.ProcessNode(child)...)
 	}
 	entry.Children = append(entry.Children, children...)
 
@@ -181,7 +181,7 @@ func (context MapContext) ProcessRelRow(node *dita.MapNode) {
 
 		var entries []*Entry
 		for _, child := range cell.Children {
-			entries = append(entries, context.ProocessNode(child)...)
+			entries = append(entries, context.ProcessNode(child)...)
 		}
 
 		entrysets = append(entrysets, entries)

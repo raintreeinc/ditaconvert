@@ -51,7 +51,7 @@ func EmptyLinkSets(links []Links) bool {
 	return true
 }
 
-func (context LoadContext) AddFamilyLinks(entries []*Entry) {
+func (context MapContext) AddFamilyLinks(entries []*Entry) {
 	linkable := make([]*Entry, 0, len(entries))
 	for _, e := range entries {
 		if e.Topic != nil {
@@ -147,7 +147,7 @@ func InterLinkEntries(A, B []*Entry) {
 	}
 }
 
-func (context LoadContext) CreateRelatedLinks(a *Entry) {
+func (context MapContext) CreateRelatedLinks(a *Entry) {
 	if a.Topic == nil || a.Topic.RelatedLinksCreated || a.Topic.Original == nil {
 		return
 	}
