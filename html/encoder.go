@@ -26,6 +26,8 @@ func NewEncoder(out io.Writer) *Encoder {
 	}
 }
 
+func (enc *Encoder) Depth() int { return len(enc.stack) }
+
 func (enc *Encoder) writeStart(token *xml.StartElement) error {
 	enc.stack = append(enc.stack, token.Name)
 	enc.invoid = voidElements[token.Name.Local]

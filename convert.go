@@ -115,6 +115,13 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 		return context.HandleConref(dec, token.(xml.StartElement))
 	}
 
+	startdepth := context.Encoder.Depth()
+	defer func() {
+		if startdepth != context.Encoder.Depth() {
+			panic("mismatched start and end handle")
+		}
+	}()
+
 	// should we unwrap the tag?
 	if context.ShouldUnwrap(token) {
 		return context.Recurse(dec)
@@ -122,9 +129,19 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 
 	// is it a starting token?
 	if start, isStart := token.(xml.StartElement); isStart {
+		// is it special already before naming
+		if process, isSpecial := Rules.Special[start.Name.Local]; isSpecial {
+			return process(context, dec, start)
+		}
+
 		// handle tag renaming
 		if newname, ok := Rules.Rename[start.Name.Local]; ok {
 			start.Name.Local = newname
+		}
+
+		// is it special after renaming?
+		if process, isSpecial := Rules.Special[start.Name.Local]; isSpecial {
+			return process(context, dec, start)
 		}
 
 		// encode starting tag and attributes
@@ -184,10 +201,13 @@ func attribute(n xml.StartElement, key string) (val string) {
 	return ""
 }
 
+type TokenProcessor func(*ConvertContext, *xml.Decoder, xml.StartElement) error
+
 var Rules = struct {
-	Rename map[string]string
-	Skip   map[string]bool
-	Unwrap map[string]bool
+	Rename  map[string]string
+	Skip    map[string]bool
+	Unwrap  map[string]bool
+	Special map[string]TokenProcessor
 }{
 	Rename: map[string]string{
 		// conversion
@@ -303,4 +323,5 @@ var Rules = struct {
 		"settings": true,
 		"setting":  true,
 	},
+	Special: map[string]TokenProcessor{},
 }
