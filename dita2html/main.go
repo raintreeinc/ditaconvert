@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"html"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,7 +9,7 @@ import (
 	"time"
 
 	"github.com/raintreeinc/ditaconvert"
-	"github.com/raintreeinc/ditaconvert/normalize"
+	"github.com/raintreeinc/ditaconvert/html"
 )
 
 func main() {
@@ -56,7 +55,7 @@ func WriteTOC(entry *ditaconvert.Entry, filename string) {
 			fmt.Fprintf(out, `<li>%s`, html.EscapeString(entry.Title))
 		} else {
 			newpath := ReplaceExt(entry.Topic.Path, ".html")
-			fmt.Fprintf(out, `<li><a href="/%s">%s</a>`, normalize.URL(newpath), entry.Title)
+			fmt.Fprintf(out, `<li><a href="/%s">%s</a>`, html.NormalizeURL(newpath), entry.Title)
 		}
 
 		if len(entry.Children) > 0 {

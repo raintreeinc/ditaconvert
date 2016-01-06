@@ -1,10 +1,8 @@
 package ditaconvert
 
 import (
-	"html"
-
 	"github.com/raintreeinc/ditaconvert/dita"
-	"github.com/raintreeinc/ditaconvert/normalize"
+	"github.com/raintreeinc/ditaconvert/html"
 )
 
 func (context *ConvertContext) RelatedLinksAsHTML() (div string) {
@@ -105,7 +103,7 @@ func (context *ConvertContext) LinkAsAnchor(link *Link) string {
 		if title == "" {
 			title = link.Href
 		}
-		return `<a href="` + normalize.URL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
+		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
 	}
 
 	if link.Topic == nil {
@@ -120,5 +118,5 @@ func (context *ConvertContext) LinkAsAnchor(link *Link) string {
 	if link.Title != "" {
 		title = link.Title
 	}
-	return `<a href="` + normalize.URL(ref) + `" data-link="` + slug + `">` + html.EscapeString(title) + `</a>`
+	return `<a href="` + html.NormalizeURL(ref) + `" data-link="` + slug + `">` + html.EscapeString(title) + `</a>`
 }

@@ -1,14 +1,19 @@
-package normalize
+package html
 
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"strings"
 )
 
+func EscapeString(s string) string {
+	return html.EscapeString(s)
+}
+
 // NormalizeURL normalizes url to be safely included as an href
 // based on golang.org/pkg/html/template
-func URL(s string) string {
+func NormalizeURL(s string) string {
 	if i := strings.IndexRune(s, ':'); i >= 0 && strings.IndexRune(s[:i], '/') < 0 {
 		protocol := strings.ToLower(s[:i])
 		if protocol != "http" && protocol != "https" && protocol != "mailto" {

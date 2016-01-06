@@ -6,40 +6,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/raintreeinc/ditaconvert/normalize"
+	"github.com/raintreeinc/ditaconvert/html"
 )
-
-func DefaultProcessAttributes(context *ConvertContext, start *xml.StartElement) {
-	var href, desc string
-	var internal bool
-
-	href = getAttr(start, "href")
-	if href != "" {
-		if start.Name.Local == "img" || start.Name.Local == "image" || start.Name.Local == "fig" {
-			setAttr(start, "href", context.InlinedImageURL(href))
-		} else {
-			href, _, desc, internal = context.ResolveLinkInfo(href)
-			setAttr(start, "href", href)
-		}
-	}
-
-	if desc != "" && getAttr(start, "title") == "" {
-		setAttr(start, "title", desc)
-	}
-
-	if internal && href != "" {
-		setAttr(start, "data-link", href)
-	}
-
-	if getAttr(start, "format") != "" && href != "" {
-		setAttr(start, "download", path.Base(href))
-	}
-}
 
 func NewDefaultRules() *Rules {
 	return &Rules{
-		ProcessAttributes: DefaultProcessAttributes,
-
 		Rename: map[string]string{
 			// conversion
 			"xref": "a",
@@ -155,13 +126,61 @@ func NewDefaultRules() *Rules {
 			"setting":  true,
 		},
 		Special: map[string]TokenProcessor{
+			"a": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				var href, desc string
+				var internal bool
+
+				href = getAttr(&start, "href")
+				if href != "" {
+					href, _, desc, internal = context.ResolveLinkInfo(href)
+					setAttr(&start, "href", href)
+				}
+
+				if desc != "" && getAttr(&start, "title") == "" {
+					setAttr(&start, "title", desc)
+				}
+
+				if internal && href != "" {
+					setAttr(&start, "data-link", href)
+				}
+
+				if getAttr(&start, "format") != "" && href != "" {
+					setAttr(&start, "download", path.Base(href))
+				}
+
+				return context.EmitWithChildren(dec, start)
+			},
+			"img": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				href := getAttr(&start, "href")
+				setAttr(&start, "src", context.InlinedImageURL(href))
+				setAttr(&start, "href", "")
+
+				placement := getAttr(&start, "placement")
+				if placement == "break" {
+					context.Encoder.Encode(xml.StartElement{
+						Name: xml.Name{Local: "p"},
+						Attr: []xml.Attr{
+							{Name: xml.Name{Local: "class"}, Value: "image"},
+						},
+					})
+				}
+
+				err := context.EmitWithChildren(dec, start)
+
+				if placement == "break" {
+					context.Encoder.Encode(xml.EndElement{
+						Name: xml.Name{Local: "p"},
+					})
+				}
+
+				return err
+			},
 			"data": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
 				datatype := strings.ToLower(getAttr(&start, "datatype"))
 				if datatype == "rttutorial" {
 					dec.Skip()
-					DefaultProcessAttributes(context, &start)
 					href := getAttr(&start, "href")
-					tag := fmt.Sprintf(`<video controls src="%s">Browser does not support video playback.</video>`, normalize.URL(href))
+					tag := fmt.Sprintf(`<video controls src="%s">Browser does not support video playback.</video>`, html.NormalizeURL(href))
 					context.Encoder.WriteRaw(tag)
 					return nil
 				}

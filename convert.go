@@ -16,8 +16,6 @@ import (
 type TokenProcessor func(*ConvertContext, *xml.Decoder, xml.StartElement) error
 
 type Rules struct {
-	ProcessAttributes func(*ConvertContext, *xml.StartElement)
-
 	Rename  map[string]string
 	Skip    map[string]bool
 	Unwrap  map[string]bool
@@ -31,7 +29,7 @@ type ConvertContext struct {
 	Encoder *html.Encoder
 	Output  *bytes.Buffer
 
-	Directory string
+	DecodingPath string
 
 	Errors []error
 }
@@ -45,7 +43,7 @@ func NewConversion(index *Index, topic *Topic) *ConvertContext {
 		Output:  &out,
 		Rules:   NewDefaultRules(),
 
-		Directory: path.Dir(topic.Path),
+		DecodingPath: topic.Path,
 	}
 }
 
@@ -174,8 +172,6 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 			return process(context, dec, start)
 		}
 
-		context.Rules.ProcessAttributes(context, &start)
-
 		return context.EmitWithChildren(dec, start)
 	}
 
@@ -183,18 +179,13 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 	return context.Encoder.Encode(token)
 }
 
-func (context *ConvertContext) HandleConref(dec *xml.Decoder, token xml.StartElement) error {
-	dec.Skip()
-	context.Encoder.WriteRaw(`<div class="conversion-error">TODO: insert conref</div>`)
-	return nil
-}
-
 func (context *ConvertContext) InlinedImageURL(href string) string {
 	if strings.HasPrefix(href, "http:") || strings.HasPrefix(href, "https:") {
 		return href
 	}
 
-	name := path.Join(context.Directory, href)
+	directory := path.Dir(context.DecodingPath)
+	name := path.Join(directory, href)
 	data, _, err := context.Index.ReadFile(name)
 	if err != nil {
 		context.errorf("invalid image link %s: %s", href, err)
