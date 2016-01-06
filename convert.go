@@ -16,10 +16,10 @@ import (
 type TokenProcessor func(*ConvertContext, *xml.Decoder, xml.StartElement) error
 
 type Rules struct {
-	Rename  map[string]string
-	Skip    map[string]bool
-	Unwrap  map[string]bool
-	Special map[string]TokenProcessor
+	Rename map[string]string
+	Skip   map[string]bool
+	Unwrap map[string]bool
+	Custom map[string]TokenProcessor
 }
 
 type ConvertContext struct {
@@ -156,8 +156,8 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 
 	// is it a starting token?
 	if start, isStart := token.(xml.StartElement); isStart {
-		// is it special already before naming
-		if process, isSpecial := context.Rules.Special[start.Name.Local]; isSpecial {
+		// is it custom already before naming
+		if process, isCustom := context.Rules.Custom[start.Name.Local]; isCustom {
 			return process(context, dec, start)
 		}
 
@@ -167,8 +167,8 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 			start.Name.Local = newname
 		}
 
-		// is it special after renaming?
-		if process, isSpecial := context.Rules.Special[start.Name.Local]; isSpecial {
+		// is it custom after renaming?
+		if process, isCustom := context.Rules.Custom[start.Name.Local]; isCustom {
 			return process(context, dec, start)
 		}
 

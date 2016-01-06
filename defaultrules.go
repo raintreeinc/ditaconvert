@@ -108,8 +108,6 @@ func NewDefaultRules() *Rules {
 			"br":            true,
 			"draft-comment": true,
 
-			"imagemap": true, // TODO: Handle properly
-
 			// RAINTREE SPECIFIC
 			"settinghead": true,
 		},
@@ -125,7 +123,7 @@ func NewDefaultRules() *Rules {
 			"settings": true,
 			"setting":  true,
 		},
-		Special: map[string]TokenProcessor{
+		Custom: map[string]TokenProcessor{
 			"a": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
 				var href, desc string
 				var internal bool
@@ -185,6 +183,29 @@ func NewDefaultRules() *Rules {
 					return nil
 				}
 
+				return context.EmitWithChildren(dec, start)
+			},
+			"imagemap": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				context.Encoder.WriteRaw(`<div class="conversion-error">TODO imagemap</div>`)
+				//TODO:
+				dec.Skip()
+				return nil
+			},
+
+			// RAINTREE SPECIFIC
+			"settingdefault": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				val, _ := html.XMLText(dec)
+				if val != "" {
+					return context.Encoder.WriteRaw("<p>Default value: " + val + "</p>")
+				}
+				return nil
+			},
+			"settinglevels": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				context.check(context.Encoder.WriteRaw("<p>Levels where it can be defined:</p>"))
+				return context.EmitWithChildren(dec, start)
+			},
+			"settingsample": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				context.check(context.Encoder.WriteRaw("<p>Example:</p>"))
 				return context.EmitWithChildren(dec, start)
 			},
 		},
