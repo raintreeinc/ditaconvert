@@ -1,9 +1,8 @@
-package Encoder
+package html
 
 import (
 	"bytes"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -80,7 +79,11 @@ func (enc *Encoder) WriteRaw(data string) error {
 	return err
 }
 
-func (enc *Encoder) EncodeXMLToken(token interface{}) error {
+func (enc *Encoder) voiderror() error {
+	return fmt.Errorf("content not allowed inside void tag %s", enc.stack[len(enc.stack)-1].Local)
+}
+
+func (enc *Encoder) Encode(token xml.Token) error {
 	switch token := token.(type) {
 	case xml.StartElement:
 		return enc.writeStart(&token)
@@ -88,13 +91,13 @@ func (enc *Encoder) EncodeXMLToken(token interface{}) error {
 		return enc.writeEnd(&token)
 	case xml.CharData:
 		if enc.invoid {
-			return errors.New("content not allowed inside void tags")
+			return enc.voiderror()
 		}
 		enc.buf.Write([]byte(token))
 		return enc.flush()
 	case xml.Comment:
 		if enc.invoid {
-			return errors.New("content not allowed inside void tags")
+			return enc.voiderror()
 		}
 		enc.buf.WriteString("<!--")
 		enc.buf.Write([]byte(token))
@@ -102,13 +105,13 @@ func (enc *Encoder) EncodeXMLToken(token interface{}) error {
 		return enc.flush()
 	case xml.ProcInst:
 		if enc.invoid {
-			return errors.New("content not allowed inside void tags")
+			return enc.voiderror()
 		}
 		// skip processing instructions
 		return nil
 	case xml.Directive:
 		if enc.invoid {
-			return errors.New("content not allowed inside void tags")
+			return enc.voiderror()
 		}
 		// skip directives
 		return nil

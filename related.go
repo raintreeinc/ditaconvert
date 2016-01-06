@@ -4,9 +4,11 @@ import (
 	"html"
 
 	"github.com/raintreeinc/ditaconvert/dita"
+	"github.com/raintreeinc/ditaconvert/normalize"
 )
 
-func RelatedLinksAsHTML(topic *Topic) (div string) {
+func (context *ConvertContext) RelatedLinksAsHTML() (div string) {
+	topic := context.Topic
 	if topic == nil || EmptyLinkSets(topic.Links) {
 		return ""
 	}
@@ -20,7 +22,7 @@ func RelatedLinksAsHTML(topic *Topic) (div string) {
 		return false
 	}
 
-	div += `<div class="dita-related-links">`
+	div += `<div class="related-links">`
 
 	for _, set := range topic.Links {
 		if len(set.Children) > 0 {
@@ -31,7 +33,7 @@ func RelatedLinksAsHTML(topic *Topic) (div string) {
 			}
 
 			for _, link := range set.Children {
-				div += "<li>" + LinkAsAnchor(link)
+				div += "<li>" + context.LinkAsAnchor(link)
 				if link.Topic.Synopsis != "" {
 					div += "<p>" + link.Topic.Synopsis + "</p>"
 				}
@@ -47,13 +49,13 @@ func RelatedLinksAsHTML(topic *Topic) (div string) {
 		}
 
 		if set.Parent != nil {
-			div += "<div><b>Parent topic: </b>" + LinkAsAnchor(set.Parent) + "</div>"
+			div += "<div><b>Parent topic: </b>" + context.LinkAsAnchor(set.Parent) + "</div>"
 		}
 		if set.Prev != nil {
-			div += "<div><b>Previous topic: </b>" + LinkAsAnchor(set.Prev) + "</div>"
+			div += "<div><b>Previous topic: </b>" + context.LinkAsAnchor(set.Prev) + "</div>"
 		}
 		if set.Next != nil {
-			div += "<div><b>Next topic: </b>" + LinkAsAnchor(set.Next) + "</div>"
+			div += "<div><b>Next topic: </b>" + context.LinkAsAnchor(set.Next) + "</div>"
 		}
 	}
 
@@ -87,7 +89,7 @@ func RelatedLinksAsHTML(topic *Topic) (div string) {
 		}
 		div += "<div><b>Related " + kind + "</b>"
 		for _, link := range links {
-			div += "<div>" + LinkAsAnchor(link) + "</div>"
+			div += "<div>" + context.LinkAsAnchor(link) + "</div>"
 		}
 		div += "</div>"
 	}
@@ -97,13 +99,13 @@ func RelatedLinksAsHTML(topic *Topic) (div string) {
 	return div
 }
 
-func LinkAsAnchor(link *Link) string {
+func (context *ConvertContext) LinkAsAnchor(link *Link) string {
 	if link.Scope == "external" {
 		title := link.Title
 		if title == "" {
 			title = link.Href
 		}
-		return `<a href="` + link.Href + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
+		return `<a href="` + normalize.URL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
 	}
 
 	if link.Topic == nil {
@@ -118,5 +120,5 @@ func LinkAsAnchor(link *Link) string {
 	if link.Title != "" {
 		title = link.Title
 	}
-	return `<a href="` + ref + `" data-link="` + slug + `">` + html.EscapeString(title) + `</a>`
+	return `<a href="` + normalize.URL(ref) + `" data-link="` + slug + `">` + html.EscapeString(title) + `</a>`
 }

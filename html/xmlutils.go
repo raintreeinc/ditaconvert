@@ -1,4 +1,4 @@
-package main
+package html
 
 import (
 	"encoding/xml"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func XMLText(decoder *xml.Decoder, start *xml.StartElement) (string, error) {
+func XMLText(decoder *xml.Decoder) (string, error) {
 	r := ""
 	for {
 		token, err := decoder.Token()
@@ -20,7 +20,7 @@ func XMLText(decoder *xml.Decoder, start *xml.StartElement) (string, error) {
 		case xml.CharData:
 			r += string(token)
 		case xml.StartElement:
-			sub, err := Text(decoder, &token)
+			sub, err := XMLText(decoder)
 			r += sub
 			if err != nil {
 				return r, err
@@ -38,7 +38,5 @@ func XMLStripTags(xmlcontent string) (string, error) {
 	if xmlcontent == "" {
 		return "", nil
 	}
-
-	dec := xml.NewDecoder(strings.NewReader(xmlcontent))
-	return Text(dec, nil)
+	return XMLText(xml.NewDecoder(strings.NewReader(xmlcontent)))
 }
