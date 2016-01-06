@@ -2,6 +2,7 @@ package ditaconvert
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -12,9 +13,21 @@ import (
 	"github.com/raintreeinc/ditaconvert/html"
 )
 
+type TokenProcessor func(*ConvertContext, *xml.Decoder, xml.StartElement) error
+
+type Rules struct {
+	ProcessAttributes func(*ConvertContext, *xml.StartElement)
+
+	Rename  map[string]string
+	Skip    map[string]bool
+	Unwrap  map[string]bool
+	Special map[string]TokenProcessor
+}
+
 type ConvertContext struct {
 	Index   *Index
 	Topic   *Topic
+	Rules   *Rules
 	Encoder *html.Encoder
 	Output  *bytes.Buffer
 
@@ -30,6 +43,7 @@ func NewConversion(index *Index, topic *Topic) *ConvertContext {
 		Topic:   topic,
 		Encoder: html.NewEncoder(&out),
 		Output:  &out,
+		Rules:   NewDefaultRules(),
 
 		Directory: path.Dir(topic.Path),
 	}
@@ -104,6 +118,21 @@ func (context *ConvertContext) Recurse(dec *xml.Decoder) error {
 	}
 }
 
+func (context *ConvertContext) EmitWithChildren(dec *xml.Decoder, start xml.StartElement) error {
+	// encode starting tag and attributes
+	if err := context.Encoder.Encode(start); err != nil {
+		return err
+	}
+
+	// recurse on child tokens
+	err := context.Recurse(dec)
+
+	// always encode ending tag
+	context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
+
+	return err
+}
+
 func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 	// should we just skip the token?
 	if context.ShouldSkip(token) {
@@ -130,32 +159,24 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 	// is it a starting token?
 	if start, isStart := token.(xml.StartElement); isStart {
 		// is it special already before naming
-		if process, isSpecial := Rules.Special[start.Name.Local]; isSpecial {
+		if process, isSpecial := context.Rules.Special[start.Name.Local]; isSpecial {
 			return process(context, dec, start)
 		}
 
 		// handle tag renaming
-		if newname, ok := Rules.Rename[start.Name.Local]; ok {
+		if newname, ok := context.Rules.Rename[start.Name.Local]; ok {
+			setAttr(&start, "data-dita", start.Name.Local)
 			start.Name.Local = newname
 		}
 
 		// is it special after renaming?
-		if process, isSpecial := Rules.Special[start.Name.Local]; isSpecial {
+		if process, isSpecial := context.Rules.Special[start.Name.Local]; isSpecial {
 			return process(context, dec, start)
 		}
 
-		// encode starting tag and attributes
-		if err := context.Encoder.Encode(start); err != nil {
-			return err
-		}
+		context.Rules.ProcessAttributes(context, &start)
 
-		// recurse on child tokens
-		err := context.Recurse(dec)
-
-		// always encode ending tag
-		context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
-
-		return err
+		return context.EmitWithChildren(dec, start)
 	}
 
 	// otherwise, encode as is
@@ -168,12 +189,49 @@ func (context *ConvertContext) HandleConref(dec *xml.Decoder, token xml.StartEle
 	return nil
 }
 
+func (context *ConvertContext) InlinedImageURL(href string) string {
+	if strings.HasPrefix(href, "http:") || strings.HasPrefix(href, "https:") {
+		return href
+	}
+
+	name := path.Join(context.Directory, href)
+	data, _, err := context.Index.ReadFile(name)
+	if err != nil {
+		context.errorf("invalid image link %s: %s", href, err)
+		return href
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(data)
+	ext := strings.ToLower(path.Ext(name))
+	if ext == "" {
+		context.errorf("invalid image link: %s", href)
+		return href
+	}
+
+	if ext == "jpg" {
+		ext = "jpeg"
+	}
+	return "data:image/" + ext + ";base64," + encoded
+}
+
+func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsis string, internal bool) {
+	if strings.HasPrefix(url, "http:") || strings.HasPrefix(url, "https:") {
+		return url, "", "", false
+	}
+
+	//TODO: add proper link handling, resolve relative to the current directory
+	//TODO: extract title
+	//TODO: extract title based on hash
+
+	return trimext(url) + ".html", "", "", true
+}
+
 func (context *ConvertContext) ShouldSkip(token xml.Token) bool {
 	start, isStart := token.(xml.StartElement)
 	if !isStart {
 		return false
 	}
-	return Rules.Skip[start.Name.Local]
+	return context.Rules.Skip[start.Name.Local]
 }
 
 func (context *ConvertContext) ShouldUnwrap(token xml.Token) bool {
@@ -181,7 +239,7 @@ func (context *ConvertContext) ShouldUnwrap(token xml.Token) bool {
 	if !isStart {
 		return false
 	}
-	return Rules.Unwrap[start.Name.Local]
+	return context.Rules.Unwrap[start.Name.Local]
 }
 
 func IsConref(token xml.Token) bool {
@@ -189,139 +247,5 @@ func IsConref(token xml.Token) bool {
 	if !isStart {
 		return false
 	}
-	return attribute(start, "conref") != ""
-}
-
-func attribute(n xml.StartElement, key string) (val string) {
-	for _, attr := range n.Attr {
-		if attr.Name.Local == key {
-			return attr.Value
-		}
-	}
-	return ""
-}
-
-type TokenProcessor func(*ConvertContext, *xml.Decoder, xml.StartElement) error
-
-var Rules = struct {
-	Rename  map[string]string
-	Skip    map[string]bool
-	Unwrap  map[string]bool
-	Special map[string]TokenProcessor
-}{
-	Rename: map[string]string{
-		// conversion
-		"xref": "a",
-		"link": "a",
-
-		//lists
-		"choices":         "ul",
-		"choice":          "li",
-		"steps-unordered": "ul",
-		"steps":           "ol",
-		"step":            "li",
-		"substeps":        "ol",
-		"substep":         "li",
-
-		"i":     "em",
-		"lines": "pre",
-
-		"codeblock": "code",
-
-		"codeph":      "span",
-		"cmdname":     "span",
-		"cmd":         "span",
-		"shortcut":    "span",
-		"wintitle":    "span",
-		"filepath":    "span",
-		"menucascade": "span",
-
-		"synph":    "span",
-		"delim":    "span",
-		"sep":      "span",
-		"parmname": "span",
-
-		"userinput": "kbd",
-
-		"image": "img",
-
-		// ui
-		"uicontrol": "span",
-
-		// divs
-		"context":    "div",
-		"result":     "div",
-		"stepresult": "div",
-		"stepxmp":    "div",
-		"info":       "div",
-		"note":       "div",
-		"refsyn":     "div",
-		"bodydiv":    "div",
-		"fig":        "div",
-
-		"prereq":  "div",
-		"postreq": "div",
-
-		// tables
-		"simpletable": "table",
-		"sthead":      "thead",
-		"strow":       "tr",
-		"stentry":     "td",
-
-		"colspec": "colgroup",
-
-		"row":   "tr",
-		"entry": "td",
-
-		// RAINTREE SPECIFIC
-		"keystroke": "span",
-		"secright":  "span",
-
-		// faq
-		"faq":          "dl",
-		"faq-question": "dt",
-		"faq-answer":   "dd",
-
-		//UI items
-		"ui-item-list": "dl",
-
-		"ui-item-name":        "dt",
-		"ui-item-description": "dd",
-
-		// setup options
-		"setup-options": "dl",
-
-		"setup-option-name":        "dt",
-		"setup-option-description": "dd",
-
-		"settingdesc": "div",
-		"settingname": "h4",
-
-		"section":    "div",
-		"example":    "div",
-		"sectiondiv": "div",
-		"title":      "h4",
-	},
-	Skip: map[string]bool{
-		"br":            true,
-		"draft-comment": true,
-
-		"imagemap": true, // TODO: Handle properly
-
-		// RAINTREE SPECIFIC
-		"settinghead": true,
-	},
-	Unwrap: map[string]bool{
-		"dlentry": true,
-		"tgroup":  true,
-
-		// RAINTREE SPECIFIC
-		"ui-item":      true,
-		"faq-item":     true,
-		"setup-option": true,
-
-		"settings": true,
-		"setting":  true,
-	},
-	Special: map[string]TokenProcessor{},
+	return getAttr(&start, "conref") != ""
 }
