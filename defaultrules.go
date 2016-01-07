@@ -25,6 +25,7 @@ func NewDefaultRules() *Rules {
 			"substeps":        "ol",
 			"substep":         "li",
 
+			"b":     "strong",
 			"i":     "em",
 			"lines": "pre",
 
@@ -34,7 +35,7 @@ func NewDefaultRules() *Rules {
 			"cmdname":     "span",
 			"cmd":         "span",
 			"shortcut":    "span",
-			"wintitle":    "span",
+			"wintitle":    "b", // was span
 			"filepath":    "span",
 			"menucascade": "span",
 
@@ -48,7 +49,7 @@ func NewDefaultRules() *Rules {
 			"image": "img",
 
 			// ui
-			"uicontrol": "span",
+			"uicontrol": "b", // was span
 
 			// divs
 			"context":    "div",
@@ -139,7 +140,7 @@ func NewDefaultRules() *Rules {
 				}
 
 				if internal && href != "" {
-					setAttr(&start, "data-link", href)
+					//setAttr(&start, "data-link", href)
 				}
 
 				if getAttr(&start, "format") != "" && href != "" {
@@ -207,6 +208,27 @@ func NewDefaultRules() *Rules {
 			"settingsample": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
 				context.check(context.Encoder.WriteRaw("<p>Example:</p>"))
 				return context.EmitWithChildren(dec, start)
+			},
+
+			// ???
+			"dt": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				setAttr(&start, "class", "dlterm")
+				return context.EmitWithChildren(dec, start)
+			},
+
+			"note": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				typ := getAttr(&start, "type")
+				if typ == "" {
+					typ = "note"
+				}
+				setAttr(&start, "type", "")
+				setAttr(&start, "class", typ)
+
+				context.check(context.Encoder.WriteStart("div", start.Attr...))
+				context.check(context.Encoder.WriteRaw(`<span class="` + typ + `title">` + strings.Title(typ) + `:</span> `))
+				err := context.Recurse(dec)
+				context.check(context.Encoder.WriteEnd("div"))
+				return err
 			},
 		},
 	}

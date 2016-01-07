@@ -87,9 +87,6 @@ func WriteTopic(index *ditaconvert.Index, topic *ditaconvert.Topic, filename str
 	fmt.Fprintf(out, `<link rel="stylesheet" href="/style.css">`)
 	fmt.Fprintf(out, `<body>`)
 	fmt.Fprintf(out, `<h3>`+html.EscapeString(topic.Title)+`</h3>`)
-	if topic.Synopsis != "" {
-		fmt.Fprintf(out, `<p class="synopsis">`+html.EscapeString(topic.Synopsis)+`</p>`)
-	}
 	fmt.Fprintf(out, `<div>`)
 	fmt.Fprintf(out, conversion.Output.String())
 	fmt.Fprintf(out, `</div>`)

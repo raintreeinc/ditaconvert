@@ -14,7 +14,7 @@ type Encoder struct {
 	buf bytes.Buffer
 	w   io.Writer
 
-	stack  []xml.Name
+	stack  []string
 	invoid bool
 }
 
@@ -22,19 +22,23 @@ func NewEncoder(out io.Writer) *Encoder {
 	return &Encoder{
 		buf:   bytes.Buffer{},
 		w:     out,
-		stack: []xml.Name{},
+		stack: []string{},
 	}
 }
 
 func (enc *Encoder) Depth() int { return len(enc.stack) }
 
-func (enc *Encoder) writeStart(token *xml.StartElement) error {
-	enc.stack = append(enc.stack, token.Name)
-	enc.invoid = voidElements[token.Name.Local]
+func (enc *Encoder) WriteXMLStart(token *xml.StartElement) error {
+	return enc.WriteStart(token.Name.Local, token.Attr...)
+}
+
+func (enc *Encoder) WriteStart(tag string, attrs ...xml.Attr) error {
+	enc.stack = append(enc.stack, tag)
+	enc.invoid = voidElements[tag]
 
 	enc.buf.WriteByte('<')
-	enc.buf.WriteString(token.Name.Local)
-	for _, attr := range token.Attr {
+	enc.buf.WriteString(tag)
+	for _, attr := range attrs {
 		if attr.Name.Local == "" {
 			continue
 		}
@@ -50,27 +54,31 @@ func (enc *Encoder) writeStart(token *xml.StartElement) error {
 	return enc.flush()
 }
 
-func (enc *Encoder) writeEnd(token *xml.EndElement) error {
+func (enc *Encoder) WriteXMLEnd(token *xml.EndElement) error {
+	return enc.WriteEnd(token.Name.Local)
+}
+
+func (enc *Encoder) WriteEnd(tag string) error {
 	if len(enc.stack) == 0 {
 		return fmt.Errorf("no unclosed tags")
 	}
 
-	var current xml.Name
+	var current string
 	n := len(enc.stack) - 1
 	current, enc.stack = enc.stack[n], enc.stack[:n]
-	if current != token.Name {
-		return fmt.Errorf("writing end tag %v expected %v", token.Name, current)
+	if current != tag {
+		return fmt.Errorf("writing end tag %v expected %v", tag, current)
 	}
 
-	enc.invoid = (len(enc.stack) > 0) && voidElements[enc.stack[len(enc.stack)-1].Local]
+	enc.invoid = (len(enc.stack) > 0) && voidElements[enc.stack[len(enc.stack)-1]]
 
 	// void elements have only a single tag
-	if voidElements[token.Name.Local] {
+	if voidElements[tag] {
 		return nil
 	}
 
 	enc.buf.WriteString("</")
-	enc.buf.WriteString(token.Name.Local)
+	enc.buf.WriteString(tag)
 	enc.buf.WriteByte('>')
 
 	return enc.flush()
@@ -82,15 +90,15 @@ func (enc *Encoder) WriteRaw(data string) error {
 }
 
 func (enc *Encoder) voiderror() error {
-	return fmt.Errorf("content not allowed inside void tag %s", enc.stack[len(enc.stack)-1].Local)
+	return fmt.Errorf("content not allowed inside void tag %s", enc.stack[len(enc.stack)-1])
 }
 
 func (enc *Encoder) Encode(token xml.Token) error {
 	switch token := token.(type) {
 	case xml.StartElement:
-		return enc.writeStart(&token)
+		return enc.WriteXMLStart(&token)
 	case xml.EndElement:
-		return enc.writeEnd(&token)
+		return enc.WriteXMLEnd(&token)
 	case xml.CharData:
 		if enc.invoid {
 			return enc.voiderror()

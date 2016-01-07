@@ -81,10 +81,25 @@ func (context *ConvertContext) Run() error {
 		context.errorf("empty body tag")
 	}
 
-	err := context.Parse(body)
+	defer context.Encoder.Flush()
+
+	if topic.ShortDesc.Content != "" {
+		context.Encoder.WriteStart("p")
+		// add shortdesc
+		if err := context.Parse(topic.ShortDesc.Content); err != nil {
+			return err
+		}
+		context.Encoder.WriteEnd("p")
+	}
+
+	// add body
+	if err := context.Parse(body); err != nil {
+		return err
+	}
+
+	// add related links
 	context.Encoder.WriteRaw(context.RelatedLinksAsHTML())
-	context.Encoder.Flush()
-	return err
+	return nil
 }
 
 // checks wheter dita tag corresponds to some "root element"
@@ -163,7 +178,7 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 
 		// handle tag renaming
 		if newname, ok := context.Rules.Rename[start.Name.Local]; ok {
-			setAttr(&start, "data-dita", start.Name.Local)
+			// setAttr(&start, "data-dita", start.Name.Local)
 			start.Name.Local = newname
 		}
 
