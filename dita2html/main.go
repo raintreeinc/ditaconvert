@@ -91,11 +91,14 @@ func WriteTopic(index *ditaconvert.Index, topic *ditaconvert.Topic, filename str
 
 	fmt.Fprint(out, "<!--INGREDIENTS:\n")
 	fmt.Fprint(out, "Keywords=")
-	for i, key := range topic.Original.Prolog.Keywords {
+	for i, key := range topic.Original.Prolog.Keywords.Terms() {
 		if i > 0 {
 			fmt.Fprint(out, ",")
 		}
 		fmt.Fprint(out, key)
+	}
+	for _, meta := range topic.Original.Prolog.OtherMeta {
+		fmt.Fprintf(out, "%s=%s\n", html.EscapeString(meta.Name), html.EscapeString(meta.Content))
 	}
 	fmt.Fprint(out, "-->\n")
 	fmt.Fprint(out, `<body id="`+topic.Original.ID+`">`)
