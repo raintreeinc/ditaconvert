@@ -219,7 +219,7 @@ func RelatedLinksAsHTML(context *ditaconvert.ConvertContext) (div string) {
 }
 
 var kindclass = map[string]string{
-	"tutorial":  "reltutorials",
+	"tutorial":  "relconcepts", //"reltutorials",
 	"reference": "relref",
 	"concept":   "relconcepts",
 	"task":      "reltasks",
@@ -238,7 +238,12 @@ func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.
 		return `<span style="background: #f00">` + html.EscapeString(link.Title) + `</span>`
 	}
 
-	ref := trimext(link.Topic.Path) + ".html"
+	reldir := PathRel(
+		path.Dir(context.Topic.Path),
+		path.Dir(link.Topic.Path),
+	)
+	ref := path.Join(reldir, trimext(path.Base(link.Topic.Path))+".html")
+
 	title := link.Topic.Title
 	if link.Title != "" {
 		title = link.Title
@@ -259,7 +264,12 @@ func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) s
 		return `<span style="background: #f00">` + html.EscapeString(link.Title) + `</span>`
 	}
 
-	ref := trimext(link.Topic.Path) + ".html"
+	reldir := PathRel(
+		path.Dir(context.Topic.Path),
+		path.Dir(link.Topic.Path),
+	)
+	ref := path.Join(reldir, trimext(path.Base(link.Topic.Path))+".html")
+
 	title, desc := link.Topic.Title, link.Topic.Synopsis
 	if link.Title != "" {
 		title = link.Title
@@ -272,3 +282,14 @@ func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) s
 }
 
 func trimext(name string) string { return name[0 : len(name)-len(filepath.Ext(name))] }
+
+func PathRel(basepath, targpath string) string {
+	relpath, err := filepath.Rel(
+		filepath.FromSlash(basepath),
+		filepath.FromSlash(targpath),
+	)
+	if err != nil {
+		return targpath
+	}
+	return filepath.ToSlash(relpath)
+}
