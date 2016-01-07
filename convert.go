@@ -161,7 +161,8 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 	startdepth := context.Encoder.Depth()
 	defer func() {
 		if startdepth != context.Encoder.Depth() {
-			panic("mismatched start and end handle")
+			fmt.Println(context.Encoder.Stack())
+			panic("mismatched start and end tag in html output")
 		}
 	}()
 
@@ -227,9 +228,34 @@ func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsi
 		return url, "", "", false
 	}
 
-	//TODO: add proper link handling, resolve relative to the current directory
-	//TODO: extract title
-	//TODO: extract title based on hash
+	var selector string
+	url, selector = SplitLink(url)
+
+	name := context.DecodingPath
+	if url != "" {
+		name = path.Join(path.Dir(context.DecodingPath), url)
+	}
+
+	topic, ok := context.Index.Topics[canonicalName(name)]
+	if !ok {
+		context.errorf("did not find topic %v [%v%v]", name, url, selector)
+		return "", "", "", false
+	}
+
+	if selector != "" {
+		var err error
+		title, err = ExtractTitle(topic.Raw, selector)
+		if err != nil {
+			context.errorf("unable to extract title from %v [%v%v]: %v", name, url, selector, err)
+		}
+	}
+
+	if title == "" {
+		title = topic.Title
+		synopsis, _ = topic.Original.ShortDesc.Text()
+	}
+
+	//TODO: SLUG
 
 	return trimext(url) + ".html", "", "", true
 }

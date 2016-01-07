@@ -89,36 +89,3 @@ func (context *ConvertContext) HandleConref(dec *xml.Decoder, start xml.StartEle
 
 	return nil
 }
-
-func splitfront(p string) (front string, tail string) {
-	i := strings.IndexRune(p, '/')
-	if i >= 0 {
-		return p[:i], p[i+1:]
-	}
-	return p, ""
-}
-
-func WalkNodePath(dec *xml.Decoder, unmatched string) (xml.StartElement, error) {
-	if unmatched == "" {
-		return xml.StartElement{}, errors.New("invalid path")
-	}
-	var nextid string
-
-	nextid, unmatched = splitfront(unmatched)
-	for {
-		token, err := dec.Token()
-		if err != nil {
-			return xml.StartElement{}, err
-		}
-
-		start, isStart := token.(xml.StartElement)
-		if isStart && strings.EqualFold(nextid, getAttr(&start, "id")) {
-			nextid, unmatched = splitfront(unmatched)
-			if nextid == "" {
-				return start, nil
-			}
-		}
-	}
-
-	panic("unreachable")
-}

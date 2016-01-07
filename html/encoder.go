@@ -25,6 +25,11 @@ func NewEncoder(out io.Writer) *Encoder {
 }
 
 func (enc *Encoder) Depth() int { return len(enc.stack) }
+func (enc *Encoder) Stack() []string {
+	stack := make([]string, len(enc.stack))
+	copy(stack, enc.stack)
+	return stack
+}
 
 func (enc *Encoder) WriteXMLStart(token *xml.StartElement) error {
 	return enc.WriteStart(token.Name.Local, token.Attr...)
@@ -36,6 +41,7 @@ func (enc *Encoder) WriteStart(tag string, attrs ...xml.Attr) error {
 
 	enc.buf.WriteByte('<')
 	enc.buf.WriteString(tag)
+
 	for _, attr := range attrs {
 		if attr.Name.Local == "" {
 			continue
