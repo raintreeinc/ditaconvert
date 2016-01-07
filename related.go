@@ -57,7 +57,7 @@ func (context *ConvertContext) RelatedLinksAsHTML() (div string) {
 	}
 
 	grouped := make(map[string][]*Link)
-	order := []string{"concept", "task", "reference", "tutorial", "information"}
+	order := []string{"tutorial", "concept", "task", "reference", "information"}
 	for _, set := range topic.Links {
 		for _, link := range set.Siblings {
 			kind := ""

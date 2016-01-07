@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/raintreeinc/ditaconvert"
+	"github.com/raintreeinc/ditaconvert/dita"
 	"github.com/raintreeinc/ditaconvert/html"
 )
 
@@ -102,10 +103,151 @@ func WriteTopic(index *ditaconvert.Index, topic *ditaconvert.Topic, filename str
 	fmt.Fprint(out, `<div>`)
 	fmt.Fprint(out, conversion.Output.String())
 	fmt.Fprint(out, `</div>`)
-	fmt.Fprint(out, conversion.RelatedLinksAsHTML())
+	fmt.Fprint(out, RelatedLinksAsHTML(conversion))
 	fmt.Fprint(out, `</body>`)
 }
 
 func ReplaceExt(name string, newext string) string {
 	return name[:len(name)-len(path.Ext(name))] + newext
 }
+
+func RelatedLinksAsHTML(context *ditaconvert.ConvertContext) (div string) {
+	topic := context.Topic
+	if topic == nil || ditaconvert.EmptyLinkSets(topic.Links) {
+		return "<div></div>"
+	}
+
+	contains := func(xs []string, s string) bool {
+		for _, x := range xs {
+			if x == s {
+				return true
+			}
+		}
+		return false
+	}
+
+	div += `<div>`
+
+	var hasFamilyLinks bool
+	for _, set := range topic.Links {
+		hasFamilyLinks = hasFamilyLinks || set.Parent != nil
+		hasFamilyLinks = hasFamilyLinks || set.Prev != nil
+		hasFamilyLinks = hasFamilyLinks || set.Next != nil
+
+		if len(set.Children) == 0 {
+			continue
+		}
+
+		if set.CollType == dita.Sequence {
+			div += `<ol class="ullinks">`
+		} else {
+			div += `<ul class="ullinks">`
+		}
+
+		for _, link := range set.Children {
+			div += `<li class="ulchildlink">` + LinkAsAnchor(context, link)
+			if link.Topic.Synopsis != "" {
+				div += `<p>` + link.Topic.Synopsis + `</p>`
+			}
+			div += `</li>`
+		}
+
+		if set.CollType == dita.Sequence {
+			div += `</ol>`
+		} else {
+			div += `</ul>`
+		}
+	}
+
+	if hasFamilyLinks {
+		div += `<div class="familylinks">`
+		for _, set := range topic.Links {
+			if set.Parent == nil && set.Prev == nil && set.Next == nil {
+				continue
+			}
+			if set.Parent != nil {
+				div += `<div class="parentlink"><strong>Parent topic: </strong>` + LinkAsAnchor(context, set.Parent) + `</div>`
+			}
+			if set.Prev != nil {
+				div += `<div class="previouslink"><strong>Previous topic: </strong>` + LinkAsAnchor(context, set.Prev) + `</div>`
+			}
+			if set.Next != nil {
+				div += `<div class="nextlink"><strong>Next topic: </strong>` + LinkAsAnchor(context, set.Next) + `</div>`
+			}
+		}
+		div += `</div>`
+	}
+
+	grouped := make(map[string][]*ditaconvert.Link)
+	order := []string{"tutorial", "concept", "task", "reference", "information"}
+	for _, set := range topic.Links {
+		for _, link := range set.Siblings {
+			kind := ""
+			if link.Topic != nil {
+				kind = link.Topic.Original.XMLName.Local
+			}
+			if link.Type != "" {
+				kind = link.Type
+			}
+			if !contains(order, kind) {
+				kind = "information"
+			}
+
+			grouped[kind] = append(grouped[kind], link)
+		}
+	}
+
+	for _, kind := range order {
+		links := grouped[kind]
+		if len(links) == 0 {
+			continue
+		}
+
+		if kind != "information" {
+			div += `<div class="relinfo ` + kindclass[kind] + `"><strong>Related ` + kind + `s</strong>`
+		} else {
+			div += `<div class="relinfo"><strong>Related information</strong>`
+		}
+		for _, link := range links {
+			div += "<div>" + LinkAsAnchor(context, link) + "</div>"
+		}
+		div += "</div>"
+	}
+	div += "</div>"
+
+	return div
+}
+
+var kindclass = map[string]string{
+	"tutorial":  "reltutorials",
+	"reference": "relref",
+	"concept":   "relconcepts",
+	"task":      "reltasks",
+}
+
+func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
+	if link.Scope == "external" {
+		title := link.Title
+		if title == "" {
+			title = link.Href
+		}
+		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
+	}
+
+	if link.Topic == nil {
+		return `<span style="background: #f00">` + html.EscapeString(link.Title) + `</span>`
+	}
+
+	ref := trimext(link.Topic.Path) + ".html"
+	title, desc := link.Topic.Title, link.Topic.Synopsis
+	if link.Title != "" {
+		title = link.Title
+	}
+	if desc == "" {
+		return `<a href="` + html.NormalizeURL(ref) + `">` + html.EscapeString(title) + `</a>`
+	} else {
+		return `<a href="` + html.NormalizeURL(ref) + `" title="` + html.EscapeString(desc) + `">` + html.EscapeString(title) + `</a>`
+	}
+}
+
+func trimext(name string) string { return name[0 : len(name)-len(filepath.Ext(name))] }
