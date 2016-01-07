@@ -250,14 +250,14 @@ func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsi
 		}
 	}
 
-	if title == "" {
+	if title == "" && topic.Original != nil {
 		title = topic.Title
 		synopsis, _ = topic.Original.ShortDesc.Text()
 	}
 
 	//TODO: SLUG
 
-	return trimext(url) + ".html", "", "", true
+	return trimext(url) + ".html", title, synopsis, true
 }
 
 func (context *ConvertContext) ShouldSkip(token xml.Token) bool {
