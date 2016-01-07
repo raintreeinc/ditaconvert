@@ -145,7 +145,7 @@ func RelatedLinksAsHTML(context *ditaconvert.ConvertContext) (div string) {
 		}
 
 		for _, link := range set.Children {
-			div += `<li class="ulchildlink">` + LinkAsAnchor(context, link)
+			div += `<li class="ulchildlink">` + LinkAsAnchorNoTitle(context, link)
 			if link.Topic.Synopsis != "" {
 				div += `<p>` + link.Topic.Synopsis + `</p>`
 			}
@@ -223,6 +223,27 @@ var kindclass = map[string]string{
 	"reference": "relref",
 	"concept":   "relconcepts",
 	"task":      "reltasks",
+}
+
+func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
+	if link.Scope == "external" {
+		title := link.Title
+		if title == "" {
+			title = link.Href
+		}
+		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
+	}
+
+	if link.Topic == nil {
+		return `<span style="background: #f00">` + html.EscapeString(link.Title) + `</span>`
+	}
+
+	ref := trimext(link.Topic.Path) + ".html"
+	title := link.Topic.Title
+	if link.Title != "" {
+		title = link.Title
+	}
+	return `<a href="` + html.NormalizeURL(ref) + `">` + html.EscapeString(title) + `</a>`
 }
 
 func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
