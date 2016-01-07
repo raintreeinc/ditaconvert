@@ -15,8 +15,10 @@ import (
 
 type TokenProcessor func(*ConvertContext, *xml.Decoder, xml.StartElement) error
 
+type Renaming struct{ Name, AddClass string }
+
 type Rules struct {
-	Rename map[string]string
+	Rename map[string]Renaming
 	Skip   map[string]bool
 	Unwrap map[string]bool
 	Custom map[string]TokenProcessor
@@ -98,7 +100,6 @@ func (context *ConvertContext) Run() error {
 	}
 
 	// add related links
-	context.Encoder.WriteRaw(context.RelatedLinksAsHTML())
 	return nil
 }
 
@@ -177,9 +178,10 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 		}
 
 		// handle tag renaming
-		if newname, ok := context.Rules.Rename[start.Name.Local]; ok {
+		if renaming, ok := context.Rules.Rename[start.Name.Local]; ok {
 			// setAttr(&start, "data-dita", start.Name.Local)
-			start.Name.Local = newname
+			start.Name.Local = renaming.Name
+			setAttr(&start, "class", renaming.AddClass)
 		}
 
 		// is it custom after renaming?

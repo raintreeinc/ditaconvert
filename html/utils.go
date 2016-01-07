@@ -8,7 +8,11 @@ import (
 )
 
 func EscapeString(s string) string {
-	return html.EscapeString(s)
+	s = html.EscapeString(s)
+	s = strings.Replace(s, "&#39;", "'", -1)
+	s = strings.Replace(s, "&#34;", "\"", -1)
+	s = strings.Replace(s, " ", "&nbsp;", -1)
+	return s
 }
 
 // NormalizeURL normalizes url to be safely included as an href

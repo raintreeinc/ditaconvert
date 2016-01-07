@@ -4,6 +4,7 @@ import "encoding/xml"
 
 type Topic struct {
 	XMLName   xml.Name
+	ID        string   `xml:"id,attr"`
 	Title     string   `xml:"title"`
 	NavTitle  string   `xml:"titlealts>navtitle"`
 	Prolog    Prolog   `xml:"prolog"`

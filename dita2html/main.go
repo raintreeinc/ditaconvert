@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path"
@@ -43,8 +44,8 @@ func WriteTOC(entry *ditaconvert.Entry, filename string) {
 	}
 	defer out.Close()
 
-	fmt.Fprintf(out, `<link rel="stylesheet" href="/style.css">`)
-	fmt.Fprintf(out, `<base target="dynamic">`)
+	fmt.Fprint(out, `<link rel="stylesheet" href="/style.css">`)
+	fmt.Fprint(out, `<base target="dynamic">`)
 
 	var PrintEntry func(entry *ditaconvert.Entry)
 	PrintEntry = func(entry *ditaconvert.Entry) {
@@ -59,24 +60,27 @@ func WriteTOC(entry *ditaconvert.Entry, filename string) {
 		}
 
 		if len(entry.Children) > 0 {
-			fmt.Fprintf(out, `<ul>`)
+			fmt.Fprint(out, `<ul>`)
 			for _, child := range entry.Children {
 				PrintEntry(child)
 			}
-			fmt.Fprintf(out, `</ul>`)
+			fmt.Fprint(out, `</ul>`)
 		}
-		fmt.Fprintf(out, "</li>")
+		fmt.Fprint(out, "</li>")
 	}
 	PrintEntry(entry)
 }
 
 func WriteTopic(index *ditaconvert.Index, topic *ditaconvert.Topic, filename string) {
 	os.MkdirAll(filepath.Dir(filename), 0755)
-	out, err := os.Create(filename)
+	file, err := os.Create(filename)
 	if err != nil {
 		panic(err)
 	}
-	defer out.Close()
+	defer file.Close()
+
+	out := bufio.NewWriter(file)
+	defer out.Flush()
 
 	conversion := ditaconvert.NewConversion(index, topic)
 	if err := conversion.Run(); err != nil {
@@ -84,13 +88,22 @@ func WriteTopic(index *ditaconvert.Index, topic *ditaconvert.Topic, filename str
 		return
 	}
 
-	fmt.Fprintf(out, `<link rel="stylesheet" href="/style.css">`)
-	fmt.Fprintf(out, `<body>`)
-	fmt.Fprintf(out, `<h3>`+html.EscapeString(topic.Title)+`</h3>`)
-	fmt.Fprintf(out, `<div>`)
-	fmt.Fprintf(out, conversion.Output.String())
-	fmt.Fprintf(out, `</div>`)
-	fmt.Fprintf(out, `</body>`)
+	fmt.Fprint(out, "<!--INGREDIENTS:\n")
+	fmt.Fprint(out, "Keywords=")
+	for i, key := range topic.Original.Prolog.Keywords {
+		if i > 0 {
+			fmt.Fprint(out, ",")
+		}
+		fmt.Fprint(out, key)
+	}
+	fmt.Fprint(out, "-->\n")
+	fmt.Fprint(out, `<body id="`+topic.Original.ID+`">`)
+	fmt.Fprint(out, `<h3>`+html.EscapeString(topic.Title)+`</h3>`)
+	fmt.Fprint(out, `<div>`)
+	fmt.Fprint(out, conversion.Output.String())
+	fmt.Fprint(out, `</div>`)
+	fmt.Fprint(out, conversion.RelatedLinksAsHTML())
+	fmt.Fprint(out, `</body>`)
 }
 
 func ReplaceExt(name string, newext string) string {

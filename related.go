@@ -37,7 +37,6 @@ func (context *ConvertContext) RelatedLinksAsHTML() (div string) {
 				}
 				div += "</li>"
 			}
-			div += "</ol>"
 
 			if set.CollType == dita.Sequence {
 				div += "</ol>"

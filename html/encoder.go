@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"golang.org/x/net/html"
 )
 
 type Encoder struct {
@@ -46,7 +44,7 @@ func (enc *Encoder) WriteStart(tag string, attrs ...xml.Attr) error {
 		enc.buf.WriteByte(' ')
 		enc.buf.WriteString(attr.Name.Local)
 		enc.buf.WriteString(`="`)
-		enc.buf.WriteString(html.EscapeString(attr.Value))
+		enc.buf.WriteString(EscapeString(attr.Value))
 		enc.buf.WriteByte('"')
 	}
 	enc.buf.WriteByte('>')
@@ -103,14 +101,14 @@ func (enc *Encoder) Encode(token xml.Token) error {
 		if enc.invoid {
 			return enc.voiderror()
 		}
-		enc.buf.Write([]byte(token))
+		enc.buf.Write([]byte(EscapeString(string(token))))
 		return enc.flush()
 	case xml.Comment:
 		if enc.invoid {
 			return enc.voiderror()
 		}
 		enc.buf.WriteString("<!--")
-		enc.buf.Write([]byte(token))
+		enc.buf.Write([]byte(EscapeString(string(token))))
 		enc.buf.WriteString("-->")
 		return enc.flush()
 	case xml.ProcInst:
