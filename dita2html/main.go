@@ -200,6 +200,10 @@ func RelatedLinksAsHTML(context *ditaconvert.ConvertContext) (div string) {
 		}
 	}
 
+	// for _, links := range grouped {
+	// 	ditaconvert.SortLinks(links)
+	// }
+
 	for _, kind := range order {
 		links := grouped[kind]
 		if len(links) == 0 {
@@ -229,16 +233,14 @@ var kindclass = map[string]string{
 }
 
 func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
+	title := html.EscapeString(link.FinalTitle())
+
 	if link.Scope == "external" {
-		title := link.Title
-		if title == "" {
-			title = link.Href
-		}
 		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
 	}
 
 	if link.Topic == nil {
-		return `<span style="background: #f00">` + html.EscapeString(link.Title) + `</span>`
+		return `<span style="background: #f00">` + title + `</span>`
 	}
 
 	reldir := PathRel(
@@ -247,24 +249,17 @@ func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.
 	)
 	ref := path.Join(reldir, trimext(path.Base(link.Topic.Path))+".html")
 
-	title := link.Topic.Title
-	if link.Title != "" {
-		title = link.Title
-	}
-	return `<a href="` + html.NormalizeURL(ref) + `">` + html.EscapeString(title) + `</a>`
+	return `<a href="` + html.NormalizeURL(ref) + `">` + title + `</a>`
 }
 
 func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
+	title := html.EscapeString(link.FinalTitle())
 	if link.Scope == "external" {
-		title := link.Title
-		if title == "" {
-			title = link.Href
-		}
 		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
 	}
 
 	if link.Topic == nil {
-		return `<span style="background: #f00">` + html.EscapeString(link.Title) + `</span>`
+		return `<span style="background: #f00">` + title + `</span>`
 	}
 
 	reldir := PathRel(
@@ -273,15 +268,11 @@ func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) s
 	)
 	ref := path.Join(reldir, trimext(path.Base(link.Topic.Path))+".html")
 
-	title, desc := link.Topic.Title, link.Topic.Synopsis
-	if link.Title != "" {
-		title = link.Title
-	}
+	desc := link.Topic.Synopsis
 	if desc == "" {
-		return `<a href="` + html.NormalizeURL(ref) + `">` + html.EscapeString(title) + `</a>`
-	} else {
-		return `<a href="` + html.NormalizeURL(ref) + `" title="` + html.EscapeString(desc) + `">` + html.EscapeString(title) + `</a>`
+		return `<a href="` + html.NormalizeURL(ref) + `">` + title + `</a>`
 	}
+	return `<a href="` + html.NormalizeURL(ref) + `" title="` + html.EscapeString(desc) + `">` + title + `</a>`
 }
 
 func trimext(name string) string { return name[0 : len(name)-len(filepath.Ext(name))] }

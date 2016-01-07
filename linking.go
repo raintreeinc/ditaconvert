@@ -2,6 +2,7 @@ package ditaconvert
 
 import (
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/raintreeinc/ditaconvert/dita"
@@ -15,6 +16,19 @@ type Link struct {
 	Href  string
 
 	Selector string
+}
+
+func (link *Link) FinalTitle() string {
+	if link.Title != "" {
+		return link.Title
+	}
+	if link.Topic != nil {
+		return link.Topic.Title
+	}
+	if link.Scope == "external" {
+		return link.Href
+	}
+	return ""
 }
 
 type Links struct {
@@ -49,6 +63,16 @@ func EmptyLinkSets(links []Links) bool {
 		}
 	}
 	return true
+}
+
+type linksByTitle []*Link
+
+func (xs linksByTitle) Len() int           { return len(xs) }
+func (xs linksByTitle) Swap(i, j int)      { xs[i], xs[j] = xs[j], xs[i] }
+func (xs linksByTitle) Less(i, j int) bool { return xs[i].FinalTitle() < xs[j].FinalTitle() }
+
+func SortLinks(links []*Link) {
+	sort.Sort(linksByTitle(links))
 }
 
 func (context MapContext) AddFamilyLinks(entries []*Entry) {

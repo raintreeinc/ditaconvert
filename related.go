@@ -97,16 +97,13 @@ func (context *ConvertContext) RelatedLinksAsHTML() (div string) {
 }
 
 func (context *ConvertContext) LinkAsAnchor(link *Link) string {
+	title := html.EscapeString(link.FinalTitle())
 	if link.Scope == "external" {
-		title := link.Title
-		if title == "" {
-			title = link.Href
-		}
 		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
 	}
 
 	if link.Topic == nil {
-		return `<span style="background: #f00">` + html.EscapeString(link.Title) + `</span>`
+		return `<span style="background: #f00">` + title + `</span>`
 	}
 
 	//TODO: adjust for mapping
@@ -114,9 +111,5 @@ func (context *ConvertContext) LinkAsAnchor(link *Link) string {
 
 	ref := "/" + trimext(link.Topic.Path) + ".html"
 	slug := trimext(link.Topic.Path)
-	title := link.Topic.Title
-	if link.Title != "" {
-		title = link.Title
-	}
-	return `<a href="` + html.NormalizeURL(ref) + `" data-link="` + slug + `">` + html.EscapeString(title) + `</a>`
+	return `<a href="` + html.NormalizeURL(ref) + `" data-link="` + slug + `">` + title + `</a>`
 }
