@@ -69,10 +69,10 @@ func NewDefaultRules() *Rules {
 			"postreq": {"div", ""},
 
 			// tables
-			"simpletable": {"table", ""},
-			"sthead":      {"thead", ""},
-			"strow":       {"tr", ""},
-			"stentry":     {"td", ""},
+			// "simpletable": {"table", ""}, handled as a rule to add tbody
+			"sthead":  {"thead", ""},
+			"strow":   {"tr", ""},
+			"stentry": {"td", ""},
 
 			"colspec": {"colgroup", ""},
 
@@ -153,7 +153,7 @@ func NewDefaultRules() *Rules {
 				if getAttr(&start, "format") != "" && href != "" {
 					setAttr(&start, "format", "")
 					ext := strings.ToLower(path.Ext(href))
-					if ext != ".htm" && ext != ".html" {
+					if ext == ".pdf" || ext == ".doc" || ext == ".xml" || ext == ".rtf" || ext == ".zip" || ext == ".exe" {
 						setAttr(&start, "download", path.Base(href))
 					} else {
 						setAttr(&start, "target", "_blank")
@@ -272,6 +272,16 @@ func NewDefaultRules() *Rules {
 				context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
 
 				return nil
+			},
+
+			"simpletable": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				context.check(context.Encoder.WriteStart("table", start.Attr...))
+				context.check(context.Encoder.WriteStart("tbody"))
+				defer func() {
+					context.check(context.Encoder.WriteEnd("tbody"))
+					context.check(context.Encoder.WriteEnd("table"))
+				}()
+				return context.Recurse(dec)
 			},
 		},
 	}

@@ -111,6 +111,7 @@ func (context *ConvertContext) LinkAsAnchor(link *Link) string {
 
 	//TODO: adjust for mapping
 	// slug := string(conv.Mapping.ByTopic[link.Topic])
+
 	ref := "/" + trimext(link.Topic.Path) + ".html"
 	slug := trimext(link.Topic.Path)
 	title := link.Topic.Title

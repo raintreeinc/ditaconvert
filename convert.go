@@ -231,6 +231,10 @@ func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsi
 	var selector string
 	url, selector = SplitLink(url)
 
+	if url == "" {
+		return "#" + selector, "", "", true
+	}
+
 	name := context.DecodingPath
 	if url != "" {
 		name = path.Join(path.Dir(context.DecodingPath), url)
@@ -252,11 +256,15 @@ func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsi
 
 	if title == "" && topic.Original != nil {
 		title = topic.Title
-		synopsis, _ = topic.Original.ShortDesc.Text()
+		if selector == "" {
+			synopsis, _ = topic.Original.ShortDesc.Text()
+		}
 	}
 
-	//TODO: SLUG
-
+	//TODO: SLUG handling
+	if selector != "" {
+		return trimext(url) + ".html#" + selector, title, synopsis, true
+	}
 	return trimext(url) + ".html", title, synopsis, true
 }
 

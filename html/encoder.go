@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"strings"
 )
 
 type Encoder struct {
@@ -145,27 +144,6 @@ func (enc *Encoder) Flush() error {
 	_, err := enc.buf.WriteTo(enc.w)
 	enc.buf.Reset()
 	return err
-}
-
-// writeQuoted writes s to w surrounded by quotes. Normally it will use double
-// quotes, but if s contains a double quote, it will use single quotes.
-// It is used for writing the identifiers in a doctype declaration.
-// In valid HTML, they can't contain both types of quotes.
-func writeQuoted(w *bytes.Buffer, s string) error {
-	var q byte = '"'
-	if strings.Contains(s, `"`) {
-		q = '\''
-	}
-	if err := w.WriteByte(q); err != nil {
-		return err
-	}
-	if _, err := w.WriteString(s); err != nil {
-		return err
-	}
-	if err := w.WriteByte(q); err != nil {
-		return err
-	}
-	return nil
 }
 
 // Section 12.1.2, "Elements", gives this list of void elements. Void elements
