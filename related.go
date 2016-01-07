@@ -97,7 +97,7 @@ func (context *ConvertContext) RelatedLinksAsHTML() (div string) {
 }
 
 func (context *ConvertContext) LinkAsAnchor(link *Link) string {
-	title := html.EscapeString(link.FinalTitle())
+	title := html.EscapeCharData(link.FinalTitle())
 	if link.Scope == "external" {
 		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
 	}

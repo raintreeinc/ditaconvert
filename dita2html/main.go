@@ -233,7 +233,7 @@ var kindclass = map[string]string{
 }
 
 func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
-	title := html.EscapeString(link.FinalTitle())
+	title := html.EscapeCharData(link.FinalTitle())
 
 	if link.Scope == "external" {
 		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
@@ -253,7 +253,7 @@ func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.
 }
 
 func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
-	title := html.EscapeString(link.FinalTitle())
+	title := html.EscapeCharData(link.FinalTitle())
 	if link.Scope == "external" {
 		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
 	}
@@ -272,7 +272,7 @@ func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) s
 	if desc == "" {
 		return `<a href="` + html.NormalizeURL(ref) + `">` + title + `</a>`
 	}
-	return `<a href="` + html.NormalizeURL(ref) + `" title="` + html.EscapeString(desc) + `">` + title + `</a>`
+	return `<a href="` + html.NormalizeURL(ref) + `" title="` + html.EscapeAttribute(desc) + `">` + title + `</a>`
 }
 
 func trimext(name string) string { return name[0 : len(name)-len(filepath.Ext(name))] }
