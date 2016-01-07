@@ -16,6 +16,22 @@ func TODO(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) err
 	return nil
 }
 
+/* TODO: unify all rules
+func Rename(tag string, attrs... xml.Attr) TokenProcessor {
+	return func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+		start.Name.Local = tag
+		return context.EmitWithChildren(dec, start)
+	}
+}
+
+func RenameWithClass(tag string, class string) TokenProcessor {
+	return func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+		start.Name.Local = tag
+		setAttr(&start, "class", class)
+		return context.EmitWithChildren(dec, start)
+	}
+}*/
+
 func NewDefaultRules() *Rules {
 	return &Rules{
 		Rename: map[string]Renaming{
