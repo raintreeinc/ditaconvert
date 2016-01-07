@@ -81,7 +81,7 @@ func (context *ConvertContext) RelatedLinksAsHTML() (div string) {
 			continue
 		}
 
-		if kind != "information" {
+		if kind != "information" && len(links) > 1 {
 			kind += "s"
 		}
 		div += "<div><b>Related " + kind + "</b>"

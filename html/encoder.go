@@ -23,12 +23,8 @@ func NewEncoder(out io.Writer) *Encoder {
 	}
 }
 
-func (enc *Encoder) Depth() int { return len(enc.stack) }
-func (enc *Encoder) Stack() []string {
-	stack := make([]string, len(enc.stack))
-	copy(stack, enc.stack)
-	return stack
-}
+func (enc *Encoder) Depth() int      { return len(enc.stack) }
+func (enc *Encoder) Stack() []string { return enc.stack }
 
 func (enc *Encoder) WriteXMLStart(token *xml.StartElement) error {
 	return enc.WriteStart(token.Name.Local, token.Attr...)

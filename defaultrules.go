@@ -10,6 +10,12 @@ import (
 	"github.com/raintreeinc/ditaconvert/html"
 )
 
+func TODO(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+	context.Encoder.WriteRaw(`<div class="conversion-error">TODO ` + start.Name.Local + `</div>`)
+	dec.Skip()
+	return nil
+}
+
 func NewDefaultRules() *Rules {
 	return &Rules{
 		Rename: map[string]Renaming{
@@ -69,10 +75,10 @@ func NewDefaultRules() *Rules {
 			"postreq": {"div", ""},
 
 			// tables
-			// "simpletable": {"table", ""}, handled as a rule to add tbody
-			"sthead":  {"thead", ""},
-			"strow":   {"tr", ""},
-			"stentry": {"td", ""},
+			"simpletable": {"table", ""},
+			"sthead":      {"thead", ""},
+			"strow":       {"tr", ""},
+			"stentry":     {"td", ""},
 
 			"colspec": {"colgroup", ""},
 
@@ -195,12 +201,7 @@ func NewDefaultRules() *Rules {
 
 				return context.EmitWithChildren(dec, start)
 			},
-			"imagemap": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
-				context.Encoder.WriteRaw(`<div class="conversion-error">TODO imagemap</div>`)
-				//TODO:
-				dec.Skip()
-				return nil
-			},
+			"imagemap": TODO,
 
 			// RAINTREE SPECIFIC
 			"settingdefault": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
@@ -274,14 +275,14 @@ func NewDefaultRules() *Rules {
 				return nil
 			},
 
-			"simpletable": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
-				context.check(context.Encoder.WriteStart("table", start.Attr...))
-				context.check(context.Encoder.WriteStart("tbody"))
-				defer func() {
-					context.check(context.Encoder.WriteEnd("tbody"))
-					context.check(context.Encoder.WriteEnd("table"))
-				}()
-				return context.Recurse(dec)
+			"stentry": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+				if stack := context.Encoder.Stack(); len(stack) > 0 && stack[len(stack)-1] == "thead" {
+					start.Name.Local = "th"
+				} else {
+					start.Name.Local = "td"
+				}
+
+				return context.EmitWithChildren(dec, start)
 			},
 		},
 	}

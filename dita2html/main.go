@@ -211,7 +211,11 @@ func RelatedLinksAsHTML(context *ditaconvert.ConvertContext) (div string) {
 		}
 
 		if kind != "information" {
-			div += `<div class="relinfo ` + kindclass[kind] + `"><strong>Related ` + kind + `s</strong>`
+			class := kindclass[kind]
+			if len(links) > 1 {
+				kind += "s"
+			}
+			div += `<div class="relinfo ` + class + `"><strong>Related ` + kind + `</strong>`
 		} else {
 			div += `<div class="relinfo"><strong>Related information</strong>`
 		}
