@@ -13,18 +13,20 @@ import (
 	"github.com/raintreeinc/ditaconvert/html"
 )
 
-type TokenProcessor func(*ConvertContext, *xml.Decoder, xml.StartElement) error
+type TokenProcessor func(*Context, *xml.Decoder, xml.StartElement) error
 
 type Renaming struct{ Name, AddClass string }
 
 type Rules struct {
+	CustomResolveLink func(url string) (href, title, synopsis string, internal bool)
+
 	Rename map[string]Renaming
 	Skip   map[string]bool
 	Unwrap map[string]bool
 	Custom map[string]TokenProcessor
 }
 
-type ConvertContext struct {
+type Context struct {
 	Index   *Index
 	Topic   *Topic
 	Rules   *Rules
@@ -36,9 +38,9 @@ type ConvertContext struct {
 	Errors []error
 }
 
-func NewConversion(index *Index, topic *Topic) *ConvertContext {
+func NewConversion(index *Index, topic *Topic) *Context {
 	var out bytes.Buffer
-	return &ConvertContext{
+	return &Context{
 		Index:   index,
 		Topic:   topic,
 		Encoder: html.NewEncoder(&out),
@@ -49,7 +51,7 @@ func NewConversion(index *Index, topic *Topic) *ConvertContext {
 	}
 }
 
-func (context *ConvertContext) check(err error) bool {
+func (context *Context) check(err error) bool {
 	if err != nil {
 		context.Errors = append(context.Errors, err)
 		return true
@@ -57,12 +59,12 @@ func (context *ConvertContext) check(err error) bool {
 	return false
 }
 
-func (context *ConvertContext) errorf(format string, args ...interface{}) {
+func (context *Context) errorf(format string, args ...interface{}) {
 	err := fmt.Errorf(format, args...)
 	context.Errors = append(context.Errors, err)
 }
 
-func (context *ConvertContext) Run() error {
+func (context *Context) Run() error {
 	topic := context.Topic.Original
 	if topic == nil {
 		return fmt.Errorf("no associated topic")
@@ -106,14 +108,14 @@ func (context *ConvertContext) Run() error {
 // checks wheter dita tag corresponds to some "root element"
 func IsBodyTag(tag string) bool { return strings.Contains(tag, "body") }
 
-func (context *ConvertContext) Parse(data string) error {
+func (context *Context) Parse(data string) error {
 	dec := xml.NewDecoder(strings.NewReader(data))
 	return context.Recurse(dec)
 }
 
 var ErrSkip = errors.New("")
 
-func (context *ConvertContext) Recurse(dec *xml.Decoder) error {
+func (context *Context) Recurse(dec *xml.Decoder) error {
 	for {
 		token, err := dec.Token()
 		if err != nil {
@@ -132,7 +134,7 @@ func (context *ConvertContext) Recurse(dec *xml.Decoder) error {
 	}
 }
 
-func (context *ConvertContext) EmitWithChildren(dec *xml.Decoder, start xml.StartElement) error {
+func (context *Context) EmitWithChildren(dec *xml.Decoder, start xml.StartElement) error {
 	// encode starting tag and attributes
 	if err := context.Encoder.Encode(start); err != nil {
 		return err
@@ -147,7 +149,7 @@ func (context *ConvertContext) EmitWithChildren(dec *xml.Decoder, start xml.Star
 	return err
 }
 
-func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
+func (context *Context) Handle(dec *xml.Decoder, token xml.Token) error {
 	// should we just skip the token?
 	if context.ShouldSkip(token) {
 		dec.Skip()
@@ -197,7 +199,7 @@ func (context *ConvertContext) Handle(dec *xml.Decoder, token xml.Token) error {
 	return context.Encoder.Encode(token)
 }
 
-func (context *ConvertContext) InlinedImageURL(href string) string {
+func (context *Context) InlinedImageURL(href string) string {
 	if strings.HasPrefix(href, "http:") || strings.HasPrefix(href, "https:") {
 		return href
 	}
@@ -223,7 +225,7 @@ func (context *ConvertContext) InlinedImageURL(href string) string {
 	return "data:image/" + ext + ";base64," + encoded
 }
 
-func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsis string, internal bool) {
+func (context *Context) ResolveLinkInfo(url string) (href, title, synopsis string, internal bool) {
 	if strings.HasPrefix(url, "http:") || strings.HasPrefix(url, "https:") {
 		return url, "", "", false
 	}
@@ -240,7 +242,7 @@ func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsi
 		name = path.Join(path.Dir(context.DecodingPath), url)
 	}
 
-	topic, ok := context.Index.Topics[canonicalName(name)]
+	topic, ok := context.Index.Topics[CanonicalPath(name)]
 	if !ok {
 		context.errorf("did not find topic %v [%v%v]", name, url, selector)
 		return "", "", "", false
@@ -268,7 +270,7 @@ func (context *ConvertContext) ResolveLinkInfo(url string) (href, title, synopsi
 	return trimext(url) + ".html", title, synopsis, true
 }
 
-func (context *ConvertContext) ShouldSkip(token xml.Token) bool {
+func (context *Context) ShouldSkip(token xml.Token) bool {
 	start, isStart := token.(xml.StartElement)
 	if !isStart {
 		return false
@@ -276,7 +278,7 @@ func (context *ConvertContext) ShouldSkip(token xml.Token) bool {
 	return context.Rules.Skip[start.Name.Local]
 }
 
-func (context *ConvertContext) ShouldUnwrap(token xml.Token) bool {
+func (context *Context) ShouldUnwrap(token xml.Token) bool {
 	start, isStart := token.(xml.StartElement)
 	if !isStart {
 		return false

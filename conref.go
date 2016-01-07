@@ -14,7 +14,7 @@ func SameRootElement(a, b string) bool {
 	return strings.EqualFold(path.Dir(a), path.Dir(b))
 }
 
-func (context *ConvertContext) HandleConref(dec *xml.Decoder, start xml.StartElement) error {
+func (context *Context) HandleConref(dec *xml.Decoder, start xml.StartElement) error {
 	dec.Skip()
 
 	conref, conrefend := getAttr(&start, "conref"), getAttr(&start, "conrefend")

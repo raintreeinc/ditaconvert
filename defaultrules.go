@@ -10,7 +10,7 @@ import (
 	"github.com/raintreeinc/ditaconvert/html"
 )
 
-func TODO(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+func TODO(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 	context.Encoder.WriteRaw(`<div class="conversion-error">TODO ` + start.Name.Local + `</div>`)
 	dec.Skip()
 	return nil
@@ -18,14 +18,14 @@ func TODO(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) err
 
 /* TODO: unify all rules
 func Rename(tag string, attrs... xml.Attr) TokenProcessor {
-	return func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+	return func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 		start.Name.Local = tag
 		return context.EmitWithChildren(dec, start)
 	}
 }
 
 func RenameWithClass(tag string, class string) TokenProcessor {
-	return func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+	return func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 		start.Name.Local = tag
 		setAttr(&start, "class", class)
 		return context.EmitWithChildren(dec, start)
@@ -153,7 +153,7 @@ func NewDefaultRules() *Rules {
 			"setting":  true,
 		},
 		Custom: map[string]TokenProcessor{
-			"a": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"a": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				var href, desc string
 				var internal bool
 
@@ -184,7 +184,7 @@ func NewDefaultRules() *Rules {
 
 				return context.EmitWithChildren(dec, start)
 			},
-			"img": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"img": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				href := getAttr(&start, "href")
 				//setAttr(&start, "src", context.InlinedImageURL(href))
 				setAttr(&start, "src", href)
@@ -205,7 +205,7 @@ func NewDefaultRules() *Rules {
 
 				return err
 			},
-			"data": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"data": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				datatype := strings.ToLower(getAttr(&start, "datatype"))
 				if datatype == "rttutorial" {
 					dec.Skip()
@@ -220,23 +220,23 @@ func NewDefaultRules() *Rules {
 			"imagemap": TODO,
 
 			// RAINTREE SPECIFIC
-			"settingdefault": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"settingdefault": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				val, _ := html.XMLText(dec)
 				if val != "" {
 					return context.Encoder.WriteRaw("<p>Default value: " + val + "</p>")
 				}
 				return nil
 			},
-			"settinglevels": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"settinglevels": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				context.check(context.Encoder.WriteRaw("<p>Levels where it can be defined:</p>"))
 				return context.EmitWithChildren(dec, start)
 			},
-			"settingsample": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"settingsample": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				context.check(context.Encoder.WriteRaw("<p>Example:</p>"))
 				return context.EmitWithChildren(dec, start)
 			},
 
-			"note": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"note": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				typ := getAttr(&start, "type")
 				if typ == "" {
 					typ = "note"
@@ -250,7 +250,7 @@ func NewDefaultRules() *Rules {
 				context.check(context.Encoder.WriteEnd("div"))
 				return err
 			},
-			"menucascade": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"menucascade": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				start.Name.Local = "span"
 
 				setAttr(&start, "class", "menucascade")
@@ -291,7 +291,7 @@ func NewDefaultRules() *Rules {
 				return nil
 			},
 
-			"stentry": func(context *ConvertContext, dec *xml.Decoder, start xml.StartElement) error {
+			"stentry": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				if stack := context.Encoder.Stack(); len(stack) > 0 && stack[len(stack)-1] == "thead" {
 					start.Name.Local = "th"
 				} else {

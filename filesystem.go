@@ -13,7 +13,7 @@ type FileSystem interface {
 	ReadFile(path string) (data []byte, modified time.Time, err error)
 }
 
-func canonicalName(name string) string { return strings.ToLower(name) }
+func CanonicalPath(name string) string { return strings.ToLower(name) }
 func trimext(name string) string       { return name[0 : len(name)-len(filepath.Ext(name))] }
 
 type Dir string

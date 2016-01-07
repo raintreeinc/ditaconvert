@@ -20,7 +20,7 @@ type MapContext struct {
 
 func (context MapContext) LoadMap(filename string) []*Entry {
 	name := path.Join(context.Dir, filename)
-	cname := canonicalName(name)
+	cname := CanonicalPath(name)
 	if m, loaded := context.Maps[cname]; loaded {
 		return m.Entries
 	}
@@ -46,7 +46,7 @@ func (context MapContext) LoadMap(filename string) []*Entry {
 
 func (context MapContext) LoadTopic(filename string) *Topic {
 	name := path.Join(context.Dir, filename)
-	cname := canonicalName(name)
+	cname := CanonicalPath(name)
 	if topic, loaded := context.Topics[cname]; loaded {
 		return topic
 	}
