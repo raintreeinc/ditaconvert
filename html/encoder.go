@@ -8,6 +8,8 @@ import (
 )
 
 type Encoder struct {
+	RewriteID string
+
 	buf bytes.Buffer
 	w   io.Writer
 
@@ -43,7 +45,11 @@ func (enc *Encoder) WriteStart(tag string, attrs ...xml.Attr) error {
 		}
 
 		enc.buf.WriteByte(' ')
-		enc.buf.WriteString(attr.Name.Local)
+		if attr.Name.Local == "id" && enc.RewriteID != "" {
+			enc.buf.WriteString(enc.RewriteID)
+		} else {
+			enc.buf.WriteString(attr.Name.Local)
+		}
 		enc.buf.WriteString(`="`)
 		enc.buf.WriteString(EscapeAttribute(attr.Value))
 		enc.buf.WriteByte('"')

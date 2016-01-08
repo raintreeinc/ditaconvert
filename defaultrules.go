@@ -132,6 +132,9 @@ func NewDefaultRules() *Rules {
 
 			// ??
 			"dt": {"dt", "dlterm"},
+
+			"settings": {"div", "settings"},
+			"setting":  {"div", "setting"},
 		},
 		Skip: map[string]bool{
 			"br":            true,
@@ -148,9 +151,6 @@ func NewDefaultRules() *Rules {
 			"ui-item":      true,
 			"faq-item":     true,
 			"setup-option": true,
-
-			"settings": true,
-			"setting":  true,
 		},
 		Custom: map[string]TokenProcessor{
 			"a": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
