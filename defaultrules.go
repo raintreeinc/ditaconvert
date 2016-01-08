@@ -57,9 +57,9 @@ func NewDefaultRules() *Rules {
 
 			"codeph":      {"samp", "codeph"},
 			"cmdname":     {"span", "cmdname"},
-			"cmd":         {"span", ""},
+			"cmd":         {"span", "cmd"},
 			"shortcut":    {"span", "shortcut"},
-			"wintitle":    {"b", ""},
+			"wintitle":    {"span", "wintitle"},
 			"filepath":    {"span", "filepath"},
 			"menucascade": {"span", "menucascade"},
 
@@ -103,7 +103,7 @@ func NewDefaultRules() *Rules {
 
 			// RAINTREE SPECIFIC
 			"keystroke": {"b", "key"},
-			"secright":  {"span", ""},
+			"secright":  {"span", "secright"},
 
 			// faq
 			"faq":          {"dl", ""},
