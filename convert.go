@@ -274,7 +274,16 @@ func (context *Context) ShouldSkip(token xml.Token) bool {
 	if !isStart {
 		return false
 	}
-	return context.Rules.Skip[start.Name.Local]
+
+	if context.Rules.Skip[start.Name.Local] {
+		return true
+	}
+
+	if !isWebAudience(getAttr(&start, "audience"), getAttr(&start, "print")) {
+		return true
+	}
+
+	return false
 }
 
 func (context *Context) ShouldUnwrap(token xml.Token) bool {
