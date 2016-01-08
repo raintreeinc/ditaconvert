@@ -81,8 +81,8 @@ func (context *Context) Run() error {
 		}
 	}
 
-	if body == "" {
-		context.errorf("empty body tag")
+	if body == "" && topic.ShortDesc.Content == "" {
+		context.errorf("page content missing")
 	}
 
 	defer context.Encoder.Flush()
@@ -226,7 +226,7 @@ func (context *Context) InlinedImageURL(href string) string {
 }
 
 func (context *Context) ResolveLinkInfo(url string) (href, title, synopsis string, internal bool) {
-	if strings.HasPrefix(url, "http:") || strings.HasPrefix(url, "https:") {
+	if strings.HasPrefix(url, "http:") || strings.HasPrefix(url, "https:") || strings.HasPrefix(url, "mailto:") {
 		return url, "", "", false
 	}
 
