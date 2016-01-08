@@ -263,7 +263,6 @@ func (context *Context) ResolveLinkInfo(url string) (href, title, synopsis strin
 		}
 	}
 
-	//TODO: SLUG handling
 	if selector != "" {
 		return trimext(url) + ".html#" + selector, title, synopsis, true
 	}

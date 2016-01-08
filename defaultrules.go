@@ -217,7 +217,7 @@ func NewDefaultRules() *Rules {
 
 				return context.EmitWithChildren(dec, start)
 			},
-			"imagemap": TODO,
+			"imagemap": ConvertImageMap,
 
 			// RAINTREE SPECIFIC
 			"settingdefault": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {

@@ -114,7 +114,7 @@ func ReplaceExt(name string, newext string) string {
 	return name[:len(name)-len(path.Ext(name))] + newext
 }
 
-func RelatedLinksAsHTML(context *ditaconvert.ConvertContext) (div string) {
+func RelatedLinksAsHTML(context *ditaconvert.Context) (div string) {
 	topic := context.Topic
 	if topic == nil || ditaconvert.EmptyLinkSets(topic.Links) {
 		return "<div></div>"
@@ -236,7 +236,7 @@ var kindclass = map[string]string{
 	"task":      "reltasks",
 }
 
-func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
+func LinkAsAnchorNoTitle(context *ditaconvert.Context, link *ditaconvert.Link) string {
 	title := html.EscapeCharData(link.FinalTitle())
 
 	if link.Scope == "external" {
@@ -256,7 +256,7 @@ func LinkAsAnchorNoTitle(context *ditaconvert.ConvertContext, link *ditaconvert.
 	return `<a href="` + html.NormalizeURL(ref) + `">` + title + `</a>`
 }
 
-func LinkAsAnchor(context *ditaconvert.ConvertContext, link *ditaconvert.Link) string {
+func LinkAsAnchor(context *ditaconvert.Context, link *ditaconvert.Link) string {
 	title := html.EscapeCharData(link.FinalTitle())
 	if link.Scope == "external" {
 		return `<a href="` + html.NormalizeURL(link.Href) + `" class="external-link" target="_blank" rel="nofollow">` + title + `</a>`
