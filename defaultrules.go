@@ -44,9 +44,9 @@ func NewDefaultRules() *Rules {
 			"choice":          {"li", ""},
 			"steps-unordered": {"ul", ""},
 			"steps":           {"ol", ""},
-			"step":            {"li", ""},
+			"step":            {"li", ""}, // handled with a custom rule
 			"substeps":        {"ol", ""},
-			"substep":         {"li", ""},
+			"substep":         {"li", ""}, // handled with a custom rule
 
 			"b":     {"strong", ""},
 			"i":     {"em", ""},
@@ -94,7 +94,7 @@ func NewDefaultRules() *Rules {
 			"simpletable": {"table", ""},
 			"sthead":      {"thead", ""},
 			"strow":       {"tr", ""},
-			"stentry":     {"td", ""},
+			"stentry":     {"td", ""}, // handled with a custom rule
 
 			"colspec": {"colgroup", ""},
 
@@ -123,12 +123,12 @@ func NewDefaultRules() *Rules {
 			"setup-option-description": {"dd", ""},
 
 			"settingdesc": {"div", ""},
-			"settingname": {"h4", ""},
+			"settingname": {"h2", ""},
 
 			"section":    {"div", "section"},
 			"example":    {"div", ""},
 			"sectiondiv": {"div", ""},
-			"title":      {"h4", "sectiontitle"},
+			"title":      {"h2", "sectiontitle"},
 
 			// ??
 			"dt": {"dt", "dlterm"},
@@ -297,8 +297,28 @@ func NewDefaultRules() *Rules {
 				} else {
 					start.Name.Local = "td"
 				}
-
 				return context.EmitWithChildren(dec, start)
+			},
+
+			"step": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
+				start.Name.Local = "li"
+
+				context.check(context.Encoder.Encode(start))
+				context.Encoder.WriteRaw("(Optional) ")
+				err := context.Recurse(dec)
+				context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
+
+				return err
+			},
+			"substep": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
+				start.Name.Local = "li"
+
+				context.check(context.Encoder.Encode(start))
+				context.Encoder.WriteRaw("(Optional) ")
+				err := context.Recurse(dec)
+				context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
+
+				return err
 			},
 		},
 	}
