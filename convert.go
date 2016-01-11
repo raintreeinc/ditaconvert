@@ -88,7 +88,8 @@ func (context *Context) Run() error {
 	defer context.Encoder.Flush()
 
 	if topic.ShortDesc.Content != "" {
-		context.Encoder.WriteStart("p")
+		context.Encoder.WriteStart("p",
+			xml.Attr{Name: xml.Name{Local: "class"}, Value: "synopsis"})
 		// add shortdesc
 		if err := context.Parse(topic.ShortDesc.Content); err != nil {
 			return err
