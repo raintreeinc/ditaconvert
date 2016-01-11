@@ -100,6 +100,13 @@ func HandleTable(context *Context, dec *xml.Decoder, start xml.StartElement) err
 							entry.SetAttr("colspan", strconv.Itoa(ei-si+1))
 						}
 					}
+
+					if morerows := entry.GetAttr("morerows"); morerows != "" {
+						entry.SetAttr("morerows", "")
+						rows, _ := strconv.Atoi(morerows)
+						entry.SetAttr("rowspan", strconv.Itoa(rows+1))
+					}
+
 					emitStart("td", entry.Attr...)
 					recurse(entry.Content)
 					emitEnd("td")
