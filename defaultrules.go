@@ -90,12 +90,6 @@ func NewDefaultRules() *Rules {
 			"prereq":  {"div", ""},
 			"postreq": {"div", ""},
 
-			// tables
-			"simpletable": {"table", ""},
-			"sthead":      {"thead", ""},
-			"strow":       {"tr", ""},
-			"stentry":     {"td", ""}, // handled with a custom rule
-
 			"colspec": {"colgroup", ""},
 
 			"row":   {"tr", ""},
@@ -291,14 +285,8 @@ func NewDefaultRules() *Rules {
 				return nil
 			},
 
-			"stentry": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
-				if stack := context.Encoder.Stack(); len(stack) > 0 && stack[len(stack)-1] == "thead" {
-					start.Name.Local = "th"
-				} else {
-					start.Name.Local = "td"
-				}
-				return context.EmitWithChildren(dec, start)
-			},
+			"simpletable": HandleSimpleTable,
+			"table":       HandleTable,
 
 			"step": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				start.Name.Local = "li"
