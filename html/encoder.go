@@ -48,7 +48,11 @@ func (enc *Encoder) WriteStart(tag string, attrs ...xml.Attr) error {
 		if attr.Name.Local == "id" && enc.RewriteID != "" {
 			enc.buf.WriteString(enc.RewriteID)
 		} else {
-			enc.buf.WriteString(attr.Name.Local)
+			if attr.Name.Space != "" {
+				enc.buf.WriteString(attr.Name.Space + ":" + attr.Name.Local)
+			} else {
+				enc.buf.WriteString(attr.Name.Local)
+			}
 		}
 		enc.buf.WriteString(`="`)
 		enc.buf.WriteString(EscapeAttribute(attr.Value))
