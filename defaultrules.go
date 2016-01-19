@@ -101,18 +101,19 @@ func NewDefaultRules() *Rules {
 
 			// faq
 			"faq":          {"dl", ""},
+			"faq-item":     {"div", ""},
 			"faq-question": {"dt", "dlterm"},
 			"faq-answer":   {"dd", ""},
 
 			//UI items
-			"ui-item-list": {"dl", ""},
-
+			"ui-item-list":        {"dl", ""},
+			"ui-item":             {"div", ""},
 			"ui-item-name":        {"dt", "dlterm"},
 			"ui-item-description": {"dd", ""},
 
 			// setup options
-			"setup-options": {"dl", ""},
-
+			"setup-options":            {"dl", ""},
+			"setup-option":             {"div", ""},
 			"setup-option-name":        {"dt", "dlterm"},
 			"setup-option-description": {"dd", ""},
 
@@ -125,7 +126,8 @@ func NewDefaultRules() *Rules {
 			"title":      {"h2", "sectiontitle"},
 
 			// ??
-			"dt": {"dt", "dlterm"},
+			"dlentry": {"div", ""},
+			"dt":      {"dt", "dlterm"},
 
 			"settings": {"div", "settings"},
 			"setting":  {"div", "setting"},
@@ -138,13 +140,7 @@ func NewDefaultRules() *Rules {
 			"settinghead": true,
 		},
 		Unwrap: map[string]bool{
-			"dlentry": true,
-			"tgroup":  true,
-
-			// RAINTREE SPECIFIC
-			"ui-item":      true,
-			"faq-item":     true,
-			"setup-option": true,
+			"tgroup": true,
 		},
 		Custom: map[string]TokenProcessor{
 			"a": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
