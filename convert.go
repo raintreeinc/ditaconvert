@@ -116,23 +116,30 @@ func (context *Context) Parse(data string) error {
 
 var ErrSkip = errors.New("")
 
-func (context *Context) Recurse(dec *xml.Decoder) error {
+func (context *Context) RecurseChildCount(dec *xml.Decoder) (error, int) {
+	count := 0
 	for {
 		token, err := dec.Token()
 		if err != nil {
 			if err == io.EOF {
-				return nil
+				return nil, count
 			}
-			return err
+			return err, count
 		}
 
 		if _, ended := token.(xml.EndElement); ended {
-			return nil
+			return nil, count
 		}
+		count++
 		if err := context.Handle(dec, token); err != nil {
-			return err
+			return err, count
 		}
 	}
+}
+
+func (context *Context) Recurse(dec *xml.Decoder) error {
+	err, _ := context.RecurseChildCount(dec)
+	return err
 }
 
 func (context *Context) EmitWithChildren(dec *xml.Decoder, start xml.StartElement) error {
