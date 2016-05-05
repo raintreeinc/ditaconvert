@@ -288,7 +288,9 @@ func NewDefaultRules() *Rules {
 				start.Name.Local = "li"
 
 				context.check(context.Encoder.Encode(start))
-				context.Encoder.WriteRaw("(Optional) ")
+				if getAttr(&start, "importance") == "optional" {
+					context.Encoder.WriteRaw("(Optional) ")
+				}
 				err := context.Recurse(dec)
 				context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
 
@@ -298,7 +300,9 @@ func NewDefaultRules() *Rules {
 				start.Name.Local = "li"
 
 				context.check(context.Encoder.Encode(start))
-				context.Encoder.WriteRaw("(Optional) ")
+				if getAttr(&start, "importance") == "optional" {
+					context.Encoder.WriteRaw("(Optional) ")
+				}
 				err := context.Recurse(dec)
 				context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
 
