@@ -106,9 +106,9 @@ func NewDefaultRules() *Rules {
 			"faq-answer":   {"dd", ""},
 
 			//UI items
-			"ui-item-list":        {"dl", ""},
-			"ui-item":             {"div", ""},
-			"ui-item-name":        {"dt", "dlterm"},
+			"ui-item-list": {"dl", ""},
+			"ui-item":      {"div", ""},
+			//"ui-item-name":        {"dt", "dlterm"},
 			"ui-item-description": {"dd", ""},
 
 			// setup options
@@ -267,6 +267,47 @@ func NewDefaultRules() *Rules {
 					if _, starting := token.(xml.StartElement); starting {
 						if !first {
 							context.Encoder.WriteRaw("&gt;")
+						}
+						first = false
+					}
+					if err := context.Handle(dec, token); err != nil {
+						return err
+					}
+				}
+
+				// always encode ending tag
+				context.check(context.Encoder.Encode(xml.EndElement{start.Name}))
+
+				return nil
+			},
+
+			"ui-item-name": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
+				start.Name.Local = "dt"
+
+				setAttr(&start, "class", "ui-item-name")
+				// encode starting tag and attributes
+				if err := context.Encoder.Encode(start); err != nil {
+					return err
+				}
+
+				first := true
+
+				// recurse on child tokens
+				for {
+					token, err := dec.Token()
+					if err != nil {
+						if err == io.EOF {
+							return nil
+						}
+						return err
+					}
+
+					if _, ended := token.(xml.EndElement); ended {
+						break
+					}
+					if _, starting := token.(xml.StartElement); starting {
+						if !first {
+							context.Encoder.WriteRaw(", ")
 						}
 						first = false
 					}
