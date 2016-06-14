@@ -18,8 +18,9 @@ type MapNode struct {
 	TOC       string `xml:"toc,attr"`
 	LockTitle string `xml:"locktitle,attr"`
 
-	Audience string `xml:"audience,attr"`
-	Print    string `xml:"print,attr"`
+	Audience       string `xml:"audience,attr"`
+	Print          string `xml:"print,attr"`
+	DeliveryTarget string `xml:"deliveryTarget,attr"`
 
 	Children []*MapNode `xml:",any"`
 }
