@@ -307,5 +307,5 @@ func IsConref(token xml.Token) bool {
 	if !isStart {
 		return false
 	}
-	return getAttr(&start, "conref") != ""
+	return getAttr(&start, "conref") != "" || getAttr(&start, "conkeyref") != ""
 }

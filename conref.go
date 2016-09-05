@@ -14,24 +14,64 @@ func SameRootElement(a, b string) bool {
 	return strings.EqualFold(path.Dir(a), path.Dir(b))
 }
 
+func (context *Context) ResolveKeyRef(keyref string) (abspath, itempath string) {
+	if keyref == "" {
+		return "", ""
+	}
+
+	items := strings.SplitN(keyref, "/", 2)
+	if len(items) < 2 {
+		context.errorf("invalid conkeyref %v", keyref)
+		return "", ""
+	}
+
+	abspath, ok := context.Index.KeyDef[items[0]]
+	if !ok {
+		context.errorf("keydef missing for %v (%v)", items[0], keyref)
+		return "", ""
+	}
+
+	return abspath, items[1]
+}
+
 func (context *Context) HandleConref(dec *xml.Decoder, start xml.StartElement) error {
 	dec.Skip()
 
-	conref, conrefend := getAttr(&start, "conref"), getAttr(&start, "conrefend")
+	conref, conkeyref, conrefend := getAttr(&start, "conref"), getAttr(&start, "conkeyref"), getAttr(&start, "conrefend")
+	keyfile, keypath := context.ResolveKeyRef(conkeyref)
 
 	startfile, startpath := SplitLink(conref)
 	endfile, endpath := SplitLink(conrefend)
+
+	// startfile and endfile are relative to current direcotry
+	// keyfile is absolute relative to the root
+
+	if startfile != "" {
+		startfile = path.Join(path.Dir(context.DecodingPath), startfile)
+	}
+	if endfile != "" {
+		endfile = path.Join(path.Dir(context.DecodingPath), endfile)
+	}
+
+	// conref is missing, try to use conkeyref instead
+	if startfile == "" && keyfile != "" {
+		if startpath != "" || endpath != "" {
+			return errors.New("invalid conkeyref setup")
+		}
+		startfile, startpath = keyfile, keypath
+	}
+
+	// conrefend is missing, fallback to either conref or conkeyref
 	if endfile == "" && endpath == "" {
 		endfile, endpath = startfile, startpath
 	}
 
+	// start/end files are both missing, use the current file
 	if startfile == "" && endfile == "" {
 		startfile, endfile = context.DecodingPath, context.DecodingPath
-	} else {
-		startfile = path.Join(path.Dir(context.DecodingPath), startfile)
-		endfile = path.Join(path.Dir(context.DecodingPath), endfile)
 	}
 
+	// sanity check
 	if startfile != endfile {
 		return errors.New("conref and conrefend are in different files: " + startfile + " --> " + endfile)
 	}

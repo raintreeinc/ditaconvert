@@ -137,6 +137,11 @@ func (context MapContext) ProcessNode(node *dita.MapNode) []*Entry {
 		return nil
 	}
 
+	if node.XMLName.Local == "keydef" {
+		context.Index.KeyDef[node.Keys] = path.Join(context.Dir, node.Href)
+		return nil
+	}
+
 	entry := &Entry{
 		Title:     node.NavTitle,
 		LockTitle: node.LockTitle == "yes",

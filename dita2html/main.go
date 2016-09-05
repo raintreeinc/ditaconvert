@@ -86,6 +86,9 @@ func WriteTopic(index *ditaconvert.Index, topic *ditaconvert.Topic, filename str
 	conversion := ditaconvert.NewConversion(index, topic)
 	if err := conversion.Run(); err != nil {
 		fmt.Printf("[%s] %s: %s\n", topic.Path, topic.Title, err)
+		for _, err := range conversion.Errors {
+			fmt.Printf("\t%v\n", err)
+		}
 		return
 	}
 

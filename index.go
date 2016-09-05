@@ -10,6 +10,8 @@ import (
 type Index struct {
 	FileSystem
 
+	KeyDef map[string]string
+
 	// cpath(path) --> topic
 	Topics map[string]*Topic
 	Maps   map[string]*Map
@@ -62,6 +64,8 @@ func NewIndex(fs FileSystem) *Index {
 			Linking: dita.NormalLinking,
 			TOC:     true,
 		},
+
+		KeyDef: make(map[string]string),
 
 		Maps:   make(map[string]*Map),
 		Topics: make(map[string]*Topic),
