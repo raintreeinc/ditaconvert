@@ -84,12 +84,14 @@ func WriteTopic(index *ditaconvert.Index, topic *ditaconvert.Topic, filename str
 	defer out.Flush()
 
 	conversion := ditaconvert.NewConversion(index, topic)
-	if err := conversion.Run(); err != nil {
-		fmt.Printf("[%s] %s: %s\n", topic.Path, topic.Title, err)
+	if err := conversion.Run(); err != nil || len(conversion.Errors) > 0 {
+		fmt.Printf("[%s] %s: %v\n", topic.Path, topic.Title, err)
 		for _, err := range conversion.Errors {
 			fmt.Printf("\t%v\n", err)
 		}
-		return
+		if err != nil {
+			return
+		}
 	}
 
 	fmt.Fprint(out, "<!--INGREDIENTS:\n")
