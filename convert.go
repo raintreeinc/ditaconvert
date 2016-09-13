@@ -287,7 +287,7 @@ func (context *Context) ShouldSkip(token xml.Token) bool {
 		return true
 	}
 
-	if !isWebAudience(getAttr(&start, "audience"), getAttr(&start, "print"), getAttr(&start, "deliveryTarget"), getAttr(&start, "product")) {
+	if !isWebAudience(getAttr(&start, "audience"), getAttr(&start, "print"), getAttr(&start, "deliveryTarget")) {
 		return true
 	}
 

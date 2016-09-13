@@ -93,7 +93,7 @@ func (context MapContext) ProcessNode(node *dita.MapNode) []*Entry {
 		panic("invalid node passed as argument")
 	}
 
-	if node.Format != "" || !isWebAudience(node.Audience, node.Print, node.DeliveryTarget, node.Product) {
+	if node.Format != "" || !isWebAudience(node.Audience, node.Print, node.DeliveryTarget) {
 		return nil
 	}
 
@@ -175,7 +175,7 @@ func (context MapContext) ProcessNode(node *dita.MapNode) []*Entry {
 }
 
 func (context MapContext) ProcessRelRow(node *dita.MapNode) {
-	if !isWebAudience(node.Audience, node.Print, node.DeliveryTarget, node.Product) {
+	if !isWebAudience(node.Audience, node.Print, node.DeliveryTarget) {
 		return
 	}
 
@@ -202,12 +202,11 @@ func (context MapContext) ProcessRelRow(node *dita.MapNode) {
 	}
 }
 
-func isWebAudience(audience string, print, deliveryTarget string, product string) bool {
+func isWebAudience(audience string, print, deliveryTarget string) bool {
 	return !(audience == "html" ||
 		audience == "print" ||
 		print == "printonly" ||
-		(deliveryTarget != "" && !strings.Contains(" "+deliveryTarget+" ", " KB ")) ||
-		product == "RevEdition")
+		(deliveryTarget != "" && !strings.Contains(" "+deliveryTarget+" ", " KB ")))
 }
 
 func isChildTOC(parenttoc bool, childtoc string) bool {

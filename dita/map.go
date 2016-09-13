@@ -22,7 +22,6 @@ type MapNode struct {
 	Audience       string `xml:"audience,attr"`
 	Print          string `xml:"print,attr"`
 	DeliveryTarget string `xml:"deliveryTarget,attr"`
-	Product        string `xml:"product,attr"`
 
 	Children []*MapNode `xml:",any"`
 }
