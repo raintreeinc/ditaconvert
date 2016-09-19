@@ -228,15 +228,32 @@ func NewDefaultRules() *Rules {
 
 			"note": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				typ := getAttr(&start, "type")
+				if typ == "other" {
+					typ = getAttr(&start, "othertype")
+				}
 				if typ == "" {
 					typ = "note"
 				}
 				setAttr(&start, "type", "")
-				setAttr(&start, "class", typ)
+				setAttr(&start, "othertype", "")
+				setAttr(&start, "class", "note")
+				mdiclass := "note-outline"
+				switch typ {
+				case "tip":
+					mdiclass = "lightbulb-outline"
+				case "caution":
+					mdiclass = "alert"
+				case "Extra":
+					mdiclass = "key"
+				case "Rev-Edition":
+					mdiclass = "elevation-rise"
+				}
 
 				context.check(context.Encoder.WriteStart("div", start.Attr...))
-				context.check(context.Encoder.WriteRaw(`<span class="` + typ + `title">` + strings.Title(typ) + `:</span> `))
+				context.check(context.Encoder.WriteRaw(`<i class="mdi mdi-` + mdiclass + `" title="` + typ + `"></i> `))
+				context.check(context.Encoder.WriteStart("span"))
 				err := context.Recurse(dec)
+				context.check(context.Encoder.WriteEnd("span"))
 				context.check(context.Encoder.WriteEnd("div"))
 				return err
 			},
