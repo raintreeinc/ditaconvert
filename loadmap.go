@@ -118,7 +118,10 @@ func (context MapContext) ProcessNode(node *dita.MapNode) []*Entry {
 		for _, child := range node.Children {
 			entries = append(entries, context.ProcessNode(child)...)
 		}
-		context.Entry = &Entry{}
+		context.Entry = &Entry{
+			CollType: context.CollType,
+			Linking:  context.Linking,
+		}
 		context.AddFamilyLinks(entries)
 		return entries
 	}
@@ -146,6 +149,8 @@ func (context MapContext) ProcessNode(node *dita.MapNode) []*Entry {
 		Title:     node.NavTitle,
 		LockTitle: node.LockTitle == "yes",
 		Type:      node.Type,
+		CollType:  context.CollType,
+		Linking:   context.Linking,
 		TOC:       isChildTOC(context.TOC, node.TOC),
 	}
 	if entry.Title == "" {
