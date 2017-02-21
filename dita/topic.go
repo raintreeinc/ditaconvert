@@ -2,7 +2,6 @@ package dita
 
 import (
 	"encoding/xml"
-	"strings"
 )
 
 type Topic struct {
@@ -18,7 +17,7 @@ type Topic struct {
 }
 
 type Prolog struct {
-	Keywords   Keywords    `xml:"metadata>keywords"`
+	Keywords   []string    `xml:"metadata>keywords>keyword"`
 	OtherMeta  []OtherMeta `xml:"metadata>othermeta"`
 	ResourceID []struct {
 		Name string `xml:"id,attr"`
@@ -47,65 +46,4 @@ type Link struct {
 type OtherMeta struct {
 	Name    string `xml:"name,attr"`
 	Content string `xml:"content,attr"`
-}
-
-type Keywords struct {
-	Content string `xml:",innerxml"`
-}
-
-func (keywords *Keywords) Terms() (terms []string) {
-	dec := xml.NewDecoder(strings.NewReader(keywords.Content))
-	for {
-		token, err := dec.Token()
-		if err != nil {
-			return
-		}
-
-		if _, isEnd := token.(xml.EndElement); isEnd {
-			return
-		}
-
-		if start, isStart := token.(xml.StartElement); isStart {
-			if start.Name.Local == "indexterm" {
-				extractCombinations(dec, &terms)
-			}
-		}
-	}
-
-	panic("unreachable")
-}
-
-func extractCombinations(dec *xml.Decoder, terms *[]string) {
-	prefix := ""
-	emitted := false
-	for {
-		token, err := dec.Token()
-		if err != nil {
-			if !emitted && prefix != "" {
-				*terms = append(*terms, prefix)
-			}
-			return
-		}
-		if _, isEnd := token.(xml.EndElement); isEnd {
-			if !emitted && prefix != "" {
-				*terms = append(*terms, prefix)
-			}
-			return
-		}
-		if start, isStart := token.(xml.StartElement); isStart {
-			if start.Name.Local == "indexterm" {
-				emitted = true
-				if prefix != "" {
-					suffix, _ := xmltext(dec)
-					*terms = append(*terms, prefix+":"+suffix)
-				}
-			} else {
-				panic("unhandled keyword:" + start.Name.Local)
-			}
-		}
-
-		if data, isData := token.(xml.CharData); isData {
-			prefix = string(data)
-		}
-	}
 }
