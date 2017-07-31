@@ -62,6 +62,7 @@ func NewDefaultRules() *Rules {
 			"wintitle":    {"span", "wintitle"},
 			"filepath":    {"span", "filepath"},
 			"menucascade": {"span", "menucascade"},
+			"msgph":       {"span", "msgph"},
 
 			"option":   {"span", "option"},
 			"synph":    {"span", ""},
