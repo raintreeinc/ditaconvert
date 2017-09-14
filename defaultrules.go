@@ -248,6 +248,8 @@ func NewDefaultRules() *Rules {
 					mdiclass = "key"
 				case "Rev-Edition":
 					mdiclass = "elevation-rise"
+				case "PDF":
+					mdiclass = "book-open"
 				}
 
 				context.check(context.Encoder.WriteStart("div", start.Attr...))
