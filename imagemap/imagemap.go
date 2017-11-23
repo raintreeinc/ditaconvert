@@ -57,11 +57,10 @@ func FromXML(mime string, data []byte, areas []XMLArea) (content *Content, err e
 				return nil, errors.New("invalid imagemap coords \"" + area.Coords + "\"")
 			}
 
-			x0, err0 := strconv.Atoi(strings.Trim(tokens[0], " "))
-			y0, err1 := strconv.Atoi(strings.Trim(tokens[1], " "))
-			x1, err2 := strconv.Atoi(strings.Trim(tokens[2], " "))
-			y1, err3 := strconv.Atoi(strings.Trim(tokens[3], " "))
-
+			x0, err0 := strconv.Atoi(strings.TrimSpace(tokens[0]))
+			y0, err1 := strconv.Atoi(strings.TrimSpace(tokens[1]))
+			x1, err2 := strconv.Atoi(strings.TrimSpace(tokens[2]))
+			y1, err3 := strconv.Atoi(strings.TrimSpace(tokens[3]))
 
 			if err0 != nil || err1 != nil || err2 != nil || err3 != nil {
 				return nil, errors.New("invalid imagemap coords \"" + area.Coords + "\"")

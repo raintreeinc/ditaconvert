@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"net/url"
 	"path"
 	"strings"
 
@@ -202,8 +203,20 @@ func NewDefaultRules() *Rules {
 				if datatype == "rttutorial" {
 					dec.Skip()
 					href := getAttr(&start, "href")
-					tag := fmt.Sprintf(`<video controls src="%s">Browser does not support video playback.</video>`, html.NormalizeURL(href))
-					context.Encoder.WriteRaw(tag)
+
+					const videof = `` +
+						`<video controls>` +
+						`	<source src="%s" type="video/mp4">` +
+						`	<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" ` +
+						`		<param name="SRC" value="http://ie.microsoft.com/testdrive/IEBlog/Common/player.swf?file=%s">` +
+						`		<p>Video playback not supported</p>` +
+						`	</object>` +
+						`</video>`
+
+					srcurl := html.NormalizeURL(href)
+					urlarg := url.QueryEscape(href)
+
+					context.Encoder.WriteRaw(fmt.Sprintf(videof, srcurl, urlarg))
 					return nil
 				}
 
