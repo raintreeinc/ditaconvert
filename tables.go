@@ -21,7 +21,7 @@ import (
       </row>
     </thead>
     <tbody>
-    <row>
+    <row deliveryTarget="F1 PDF">
         <entry namest="COLSPEC0" nameend="COLSPEC1">Mammals</entry>
         <entry>19-22 months</entry>
       </row>
@@ -37,6 +37,7 @@ import (
   </tgroup>
 </table>
 */
+
 func HandleTable(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 	var t table.XML
 
@@ -91,6 +92,10 @@ func HandleTable(context *Context, dec *xml.Decoder, start xml.StartElement) err
 		{
 			emitStart("tbody")
 			for _, row := range group.Rows {
+				if !isWebAudience(row.GetAttr("audience"), row.GetAttr("print"), row.GetAttr("deliveryTarget")) {
+					continue
+				}
+
 				emitStart("tr", row.Attr...)
 				for _, entry := range row.Entries {
 					if startid, endid := entry.Bounds(); startid != "" || endid != "" {
