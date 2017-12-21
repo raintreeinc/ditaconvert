@@ -136,7 +136,7 @@ func HandleTable(context *Context, dec *xml.Decoder, start xml.StartElement) err
     <stentry>Type style</stentry>
     <stentry>Elements used</stentry>
   </sthead>
-  <strow>
+  <strow deliveryTarget="F1 PDF">
     <stentry>Bold</stentry>
     <stentry>b</stentry>
   </strow>
@@ -198,6 +198,10 @@ func HandleSimpleTable(context *Context, dec *xml.Decoder, start xml.StartElemen
 	{
 		emitStart("tbody")
 		for _, row := range t.Rows {
+			if !isWebAudience(row.GetAttr("audience"), row.GetAttr("print"), row.GetAttr("deliveryTarget")) {
+				continue
+			}
+
 			emitStart("tr", row.Attr...)
 			for _, entry := range row.Entries {
 				emitStart("td", entry.Attr...)
