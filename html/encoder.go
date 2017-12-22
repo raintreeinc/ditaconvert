@@ -39,6 +39,28 @@ func (enc *Encoder) WriteStart(tag string, attrs ...xml.Attr) error {
 	enc.buf.WriteByte('<')
 	enc.buf.WriteString(tag)
 
+	outputclass := ""
+	var class *xml.Attr
+	for i, attr := range attrs {
+		switch attr.Name.Local {
+		case "outputclass":
+			outputclass += " " + attr.Value
+		case "class":
+			class = &attrs[i]
+		}
+	}
+
+	if outputclass != "" {
+		if class != nil {
+			class.Value += outputclass
+		} else {
+			attrs = append(attrs, xml.Attr{
+				Name:  xml.Name{Local: "class"},
+				Value: outputclass[1:],
+			})
+		}
+	}
+
 	for _, attr := range attrs {
 		if attr.Name.Local == "" {
 			continue
