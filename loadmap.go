@@ -93,7 +93,7 @@ func (context MapContext) ProcessNode(node *dita.MapNode) []*Entry {
 		panic("invalid node passed as argument")
 	}
 
-	if node.Format != "" || !isWebAudience(node.Audience, node.Print, node.DeliveryTarget) {
+	if node.Format != "" || !isWebAudience(node.Audience, node.Print, node.DeliveryTarget) || isResourceOnly(node.ProcessRole) {
 		return nil
 	}
 
@@ -219,4 +219,8 @@ func isChildTOC(parenttoc bool, childtoc string) bool {
 		return parenttoc
 	}
 	return childtoc == "yes"
+}
+
+func isResourceOnly(role string) bool {
+	return (role == "resource-only")
 }
