@@ -187,7 +187,7 @@ func RelatedLinksAsHTML(context *ditaconvert.Context) (div string) {
 	}
 
 	grouped := make(map[string][]*ditaconvert.Link)
-	order := []string{"tutorial", "concept", "task", "reference", "information"}
+	order := []string{"video", "concept", "task", "reference", "information"}
 	for _, set := range topic.Links {
 		for _, link := range set.Siblings {
 			kind := ""
@@ -196,6 +196,9 @@ func RelatedLinksAsHTML(context *ditaconvert.Context) (div string) {
 			}
 			if link.Type != "" {
 				kind = link.Type
+			}
+			if kind == "tutorial" {
+				kind = "video"
 			}
 			if !contains(order, kind) {
 				kind = "information"
@@ -235,7 +238,7 @@ func RelatedLinksAsHTML(context *ditaconvert.Context) (div string) {
 }
 
 var kindclass = map[string]string{
-	"tutorial":  "relconcepts", //"reltutorials",
+	"video":  "reltutorials",
 	"reference": "relref",
 	"concept":   "relconcepts",
 	"task":      "reltasks",
