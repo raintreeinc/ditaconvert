@@ -384,6 +384,16 @@ func NewDefaultRules() *Rules {
 
 				return err
 			},
+			"p": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
+
+				err := context.EmitWithChildren(dec, start)
+
+				if getAttr(&start, "outputclass") == "no-results-warning" {
+					context.Encoder.WriteRaw(`<hr class="no-results-warning">`)
+				}
+
+				return err
+			},
 		},
 	}
 }
