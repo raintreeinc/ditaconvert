@@ -65,6 +65,7 @@ func NewDefaultRules() *Rules {
 			"menucascade": {"span", "menucascade"},
 			"msgph":       {"span", "msgph"},
 			"reportitem":  {"span", "reportitem"},
+			"varname":     {"span", "varname"},
 
 			"option":   {"span", "option"},
 			"synph":    {"span", ""},
