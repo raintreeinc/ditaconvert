@@ -121,9 +121,6 @@ func NewDefaultRules() *Rules {
 			"setup-option-name":        {"dt", "dlterm"},
 			"setup-option-description": {"dd", ""},
 
-			"settingdesc": {"div", ""},
-			"settingname": {"h2", ""},
-
 			"section":    {"div", "section"},
 			"example":    {"div", ""},
 			"sectiondiv": {"div", ""},
@@ -132,9 +129,6 @@ func NewDefaultRules() *Rules {
 			// ??
 			"dlentry": {"div", ""},
 			"dt":      {"dt", "dlterm"},
-
-			"settings": {"div", "settings"},
-			"setting":  {"div", "setting"},
 		},
 		Skip: map[string]bool{
 			"br":            true,
@@ -224,23 +218,6 @@ func NewDefaultRules() *Rules {
 				return context.EmitWithChildren(dec, start)
 			},
 			"imagemap": ConvertImageMap,
-
-			// RAINTREE SPECIFIC
-			"settingdefault": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
-				val, _ := html.XMLText(dec)
-				if val != "" {
-					return context.Encoder.WriteRaw("<p>Default value: " + val + "</p>")
-				}
-				return nil
-			},
-			"settinglevels": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
-				context.check(context.Encoder.WriteRaw("<p>Levels where it can be defined:</p>"))
-				return context.EmitWithChildren(dec, start)
-			},
-			"settingsample": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
-				context.check(context.Encoder.WriteRaw("<p>Example:</p>"))
-				return context.EmitWithChildren(dec, start)
-			},
 
 			"note": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				typ := getAttr(&start, "type")
@@ -359,6 +336,7 @@ func NewDefaultRules() *Rules {
 
 			"simpletable": HandleSimpleTable,
 			"table":       HandleTable,
+			"settings":    HandleSettings,
 
 			"step": func(context *Context, dec *xml.Decoder, start xml.StartElement) error {
 				start.Name.Local = "li"

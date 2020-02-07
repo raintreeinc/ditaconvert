@@ -74,3 +74,27 @@ type SimpleRow struct {
 type SimpleRowInner struct {
 	Entries []Entry `xml:"stentry"`
 }
+
+type SettingsXML struct {
+	Attributes
+	SettingsXMLInner
+}
+type SettingsXMLInner struct {
+	Rows []SettingRow `xml:"setting"`
+}
+
+type SettingRow struct {
+	Attributes
+	SettingRowInner
+}
+type SettingRowInner struct {
+	Name	SettingName `xml:"settingname"`
+	Default	string 		`xml:"settingdefault"`
+	Desc	Entry 		`xml:"settingdesc"`
+	Example	Entry 		`xml:"settingsample"`
+	Levels	string 		`xml:"settinglevels"`
+}
+type SettingName struct {
+	Attributes
+	Text string `xml:",innerxml"`
+}
