@@ -89,7 +89,7 @@ func NewDefaultRules() *Rules {
 			"note":       {"div", ""},
 			"refsyn":     {"div", ""},
 			"bodydiv":    {"div", ""},
-			"fig":        {"div", ""},
+			"fig":        {"div", "figure"},
 
 			"prereq":  {"div", ""},
 			"postreq": {"div", ""},
