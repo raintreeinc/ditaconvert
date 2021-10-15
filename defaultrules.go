@@ -122,7 +122,7 @@ func NewDefaultRules() *Rules {
 			"setup-option-description": {"dd", ""},
 
 			"section":    {"div", "section"},
-			"example":    {"div", ""},
+			"example":    {"div", "example"},
 			"sectiondiv": {"div", ""},
 			"title":      {"h2", "sectiontitle"},
 
