@@ -4,7 +4,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"net/url"
 	"path"
 	"strings"
 
@@ -206,9 +205,8 @@ func NewDefaultRules() *Rules {
 						`</video>`
 
 					srcurl := html.NormalizeURL(href)
-					urlarg := url.QueryEscape(href)
 
-					context.Encoder.WriteRaw(fmt.Sprintf(videof, srcurl, urlarg))
+					context.Encoder.WriteRaw(fmt.Sprintf(videof, srcurl))
 					return nil
 				}
 
